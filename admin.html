@@ -18,11 +18,11 @@
     </div>
 
     <!-- Admin Dashboard -->
-    <div id="adminDashboard" class="max-w-4xl mx-auto space-y-6 hidden">
+    <div id="adminDashboard" class="max-w-5xl mx-auto space-y-6 hidden">
         <header class="bg-slate-900 text-white p-6 rounded-2xl flex justify-between items-center shadow-lg">
             <div>
                 <h1 class="text-2xl font-extrabold">👑 Admin Panel</h1>
-                <p class="text-xs text-slate-400">Göndərilən çekləri və ianələri izləyin</p>
+                <p class="text-xs text-slate-400">Göndərilən çekləri kopyalayın və ƏDV sisteminə əlavə edin</p>
             </div>
             <div class="flex gap-2">
                 <a href="/" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700">Ana Səhifə</a>
@@ -59,7 +59,7 @@
                             <th class="p-3">Vaxt</th>
                             <th class="p-3">İştirakçı</th>
                             <th class="p-3">Kampaniya</th>
-                            <th class="p-3">Çek Kodu / QR</th>
+                            <th class="p-3">Çek Kodu / QR Linki</th>
                             <th class="p-3">Məbləğ</th>
                         </tr>
                     </thead>
@@ -73,7 +73,6 @@
 
     <script>
         const ADMIN_PASS = "admin331234";
-        // Hardcoded tunnel API base for guaranteed connectivity
         let API_BASE = "https://games-particularly-amy-school.trycloudflare.com";
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -114,7 +113,7 @@
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                // Keep hardcoded fallback API_BASE
+                // Keep fallback
             }
         }
 
@@ -142,14 +141,20 @@
                     const campaign = data.campaigns.find(c => c.id === r.campaignId);
                     const campaignTitle = campaign ? campaignTitleShort(campaign.title) : 'Naməlum';
                     const timeStr = new Date(r.timestamp).toLocaleString();
+                    const safeQrData = r.qrData.replace(/'/g, "\\'");
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50">
-                            <td class="p-3 text-xs text-slate-500">${timeStr}</td>
+                            <td class="p-3 text-xs text-slate-500 whitespace-nowrap">${timeStr}</td>
                             <td class="p-3 font-bold text-slate-800">${r.username}</td>
                             <td class="p-3 text-xs text-slate-600">${campaignTitle}</td>
-                            <td class="p-3 font-mono text-xs text-blue-600 bg-blue-50 rounded">${r.qrData}</td>
-                            <td class="p-3 font-bold text-emerald-600">+${r.amount} AZN</td>
+                            <td class="p-3">
+                                <div class="flex items-center gap-2 bg-blue-50 p-2 rounded-xl border border-blue-100">
+                                    <span class="font-mono text-xs text-blue-700 truncate max-w-xs">${r.qrData}</span>
+                                    <button onclick="copyToClipboard('${safeQrData}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow shrink-0">Kopyala</button>
+                                </div>
+                            </td>
+                            <td class="p-3 font-bold text-emerald-600 whitespace-nowrap">+${r.amount} AZN</td>
                         </tr>
                     `;
                 });
@@ -157,6 +162,15 @@
                 console.error(e);
                 alert('Admin məlumatları yüklənərkən xəta baş verdi.');
             }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Çek kodu kopyalandı:\n' + text);
+            }).catch(err => {
+                console.error('Kopyalama xətası: ', err);
+                alert('Kopyalamaq mümkün olmadı.');
+            });
         }
 
         function campaignTitleShort(title) {
