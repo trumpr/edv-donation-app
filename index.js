@@ -147,12 +147,38 @@ app.get('/api/leaderboard', (req, res) => {
     res.json(users);
 });
 
+// API: Get comments
+app.get('/api/comments', (req, res) => {
+    res.json(storage.data.comments);
+});
+
+// API: Post a comment
+app.post('/api/comments', (req, res) => {
+    const { username, text } = req.body;
+    if (!username || !text || !text.trim()) {
+        return res.status(400).json({ success: false, message: 'İstifadəçi adı və mətn tələb olunur.' });
+    }
+
+    const newComment = {
+        id: Date.now().toString(),
+        username: username.trim(),
+        text: text.trim(),
+        timestamp: new Date().toISOString()
+    };
+
+    storage.data.comments.push(newComment);
+    storage.saveComments();
+
+    res.json({ success: true, message: 'Komment əlavə olundu.', comment: newComment });
+});
+
 // API: Admin data overview
 app.get('/api/admin/data', (req, res) => {
     res.json({
         receipts: storage.data.receipts,
         users: storage.data.users,
-        campaigns: storage.data.campaigns
+        campaigns: storage.data.campaigns,
+        comments: storage.data.comments
     });
 });
 

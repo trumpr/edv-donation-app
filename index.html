@@ -128,6 +128,20 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Comments Section -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span>💬</span> İcma Müzakirəsi və Kommentlər
+                </h2>
+                <div class="space-y-3">
+                    <textarea id="commentTextInput" rows="2" placeholder="Fikir və rəylərinizi burada paylaşın..." class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm bg-slate-50"></textarea>
+                    <button onclick="postComment()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl font-bold transition shadow text-sm">Rəy Bildir</button>
+                </div>
+                <div id="commentsList" class="space-y-3 pt-2 border-t border-slate-100 max-h-60 overflow-y-auto">
+                    <!-- Comments loaded dynamically -->
+                </div>
+            </div>
         </main>
 
         <!-- Footer -->
@@ -151,6 +165,7 @@
             fetchCampaigns();
             fetchLeaderboard();
             fetchRecent();
+            fetchComments();
         });
 
         async function loadConfig() {
@@ -475,6 +490,60 @@
             } catch (e) {
                 console.error(e);
             }
+        }
+
+        async function fetchComments() {
+            try {
+                const res = await fetch(API_BASE + '/api/comments');
+                const comments = await res.json();
+                const listEl = document.getElementById('commentsList');
+                listEl.innerHTML = '';
+                if (comments.length === 0) {
+                    listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center">Hələ rəy yazılmayıb. İlk rəyi siz yazın!</p>';
+                    return;
+                }
+                comments.slice().reverse().forEach(c => {
+                    const timeStr = new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    listEl.innerHTML += `
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
+                            <div class="flex justify-between items-center font-bold text-emerald-900">
+                                <span>${c.username}</span>
+                                <span class="text-[10px] text-slate-400 font-normal">${timeStr}</span>
+                            </div>
+                            <p class="text-slate-700 whitespace-pre-line">${escapeHtml(c.text)}</p>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function postComment() {
+            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
+            const text = document.getElementById('commentTextInput').value.trim();
+            if (!text) return alert('Zəhmət olmasa rəy mətnini daxil edin');
+
+            try {
+                const res = await fetch(API_BASE + '/api/comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, text })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('commentTextInput').value = '';
+                    fetchComments();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('Rəy göndərilərkən xəta baş verdi.');
+            }
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
     </script>
 </body>
