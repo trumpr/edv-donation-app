@@ -146,6 +146,10 @@
                     <span>💬</span> İcma Müzakirəsi və Kommentlər
                 </h2>
                 <div class="space-y-3">
+                    <div class="flex items-center gap-2">
+                        <div id="commentUserAvatar" class="w-7 h-7 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-xs shrink-0 overflow-hidden shadow-inner">?</div>
+                        <span id="commentUsernameLabel" class="text-xs font-bold text-slate-700">Daxil olunmayıb</span>
+                    </div>
                     <textarea id="commentTextInput" rows="2" placeholder="Fikir və rəylərinizi burada paylaşın..." class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm bg-slate-50"></textarea>
                     <button onclick="postComment()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl font-bold transition shadow text-sm">Rəy Bildir</button>
                 </div>
@@ -172,6 +176,7 @@
                 document.getElementById('usernameInput').value = currentUser;
                 showProfile();
                 fetchUserStats();
+                updateCommentBoxUser();
             }
             fetchCampaigns();
             fetchLeaderboard();
@@ -212,6 +217,7 @@
                     fetchUserStats();
                     fetchLeaderboard();
                     fetchRecent();
+                    updateCommentBoxUser();
                 } else {
                     alert('Xəta: ' + data.message);
                 }
@@ -226,12 +232,14 @@
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('profileSection').classList.add('hidden');
             document.getElementById('pinInput').value = '';
+            updateCommentBoxUser();
         }
 
         function showProfile() {
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('profileSection').classList.remove('hidden');
             document.getElementById('displayUsername').innerText = currentUser;
+            updateCommentBoxUser();
         }
 
         function openProfileModal() {
@@ -310,6 +318,7 @@
                     closeProfileModal();
                     fetchUserStats();
                     fetchLeaderboard();
+                    updateCommentBoxUser();
                 } else {
                     alert('Xəta: ' + data.message);
                 }
@@ -440,6 +449,23 @@
             } catch (e) {
                 console.error(e);
                 return null;
+            }
+        }
+
+        async function updateCommentBoxUser() {
+            const avatarEl = document.getElementById('commentUserAvatar');
+            const nameEl = document.getElementById('commentUsernameLabel');
+            if (currentUser) {
+                nameEl.innerText = currentUser;
+                const data = await fetchUserStats();
+                if (data && data.avatarBase64) {
+                    avatarEl.innerHTML = `<img src="${data.avatarBase64}" class="w-full h-full object-cover">`;
+                } else {
+                    avatarEl.innerText = currentUser.charAt(0).toUpperCase();
+                }
+            } else {
+                nameEl.innerText = "Daxil olunmayıb";
+                avatarEl.innerText = "?";
             }
         }
 
