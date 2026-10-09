@@ -159,9 +159,13 @@ app.post('/api/comments', (req, res) => {
         return res.status(400).json({ success: false, message: 'İstifadəçi adı və mətn tələb olunur.' });
     }
 
+    const u = username.trim();
+    const userObj = storage.data.users[u] || {};
+
     const newComment = {
         id: Date.now().toString(),
-        username: username.trim(),
+        username: u,
+        avatarBase64: userObj.avatarBase64 || '',
         text: text.trim(),
         timestamp: new Date().toISOString()
     };

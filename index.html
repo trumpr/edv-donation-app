@@ -504,13 +504,21 @@
                 }
                 comments.slice().reverse().forEach(c => {
                     const timeStr = new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    let avatarHtml = `<div class="w-7 h-7 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-xs shrink-0">${c.username.charAt(0).toUpperCase()}</div>`;
+                    if (c.avatarBase64) {
+                        avatarHtml = `<img src="${c.avatarBase64}" class="w-7 h-7 rounded-full object-cover shrink-0">`;
+                    }
+
                     listEl.innerHTML += `
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
-                            <div class="flex justify-between items-center font-bold text-emerald-900">
-                                <span>${c.username}</span>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-2 font-bold text-emerald-900">
+                                    ${avatarHtml}
+                                    <span>${c.username}</span>
+                                </div>
                                 <span class="text-[10px] text-slate-400 font-normal">${timeStr}</span>
                             </div>
-                            <p class="text-slate-700 whitespace-pre-line">${escapeHtml(c.text)}</p>
+                            <p class="text-slate-700 whitespace-pre-line pl-9">${escapeHtml(c.text)}</p>
                         </div>
                     `;
                 });
@@ -532,6 +540,7 @@
                 });
                 const data = await res.json();
                 if (data.success) {
+                    document.getElementById('commentTextInput.value = ''');
                     document.getElementById('commentTextInput').value = '';
                     fetchComments();
                 } else {
