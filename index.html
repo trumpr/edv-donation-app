@@ -152,6 +152,19 @@
                 </div>
             </div>
 
+            <!-- Participants Search Section -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span>👥</span> İştirakçılar və Axtarış
+                </h2>
+                <div>
+                    <input type="text" id="participantSearchInput" placeholder="İştirakçı adını axtar..." oninput="filterParticipants()" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm bg-slate-50">
+                </div>
+                <div id="participantsList" class="space-y-2 max-h-60 overflow-y-auto">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
             <!-- Leaderboard & Recent Activity Tabs -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <!-- Top Donors -->
@@ -216,6 +229,7 @@
         let allComments = [];
         let activeChatUser = null;
         let chatInterval = null;
+        let allParticipants = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadConfig();
@@ -228,6 +242,7 @@
             fetchLeaderboard();
             fetchRecent();
             fetchComments();
+            fetchParticipants();
         });
 
         async function loadConfig() {
@@ -263,6 +278,7 @@
                     fetchUserStats();
                     fetchLeaderboard();
                     fetchRecent();
+                    fetchParticipants();
                     updateCommentBoxUser();
                 } else {
                     alert('Xəta: ' + data.message);
@@ -364,6 +380,7 @@
                     closeProfileModal();
                     fetchUserStats();
                     fetchLeaderboard();
+                    fetchParticipants();
                     updateCommentBoxUser();
                     fetchComments();
                 } else {
@@ -374,7 +391,7 @@
             }
         }
 
-        // Chat Functions
+        // Chat & Participants Functions
         function openChatModal() {
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             document.getElementById('chatModal').classList.remove('hidden');
@@ -385,6 +402,62 @@
         function closeChatModal() {
             document.getElementById('chatModal').classList.add('hidden');
             if (chatInterval) clearInterval(chatInterval);
+        }
+
+        async function fetchParticipants() {
+            try {
+                const res = await fetch(API_BASE + '/api/leaderboard');
+                allParticipants = await res.json();
+                renderParticipants(allParticipants);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderParticipants(users) {
+            const listEl = document.getElementById('participantsList');
+            listEl.innerHTML = '';
+            if (users.length === 0) {
+                listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center">İştirakçı tapılmadı.</p>';
+                return;
+            }
+
+            users.forEach(u => {
+                let avatarHtml = `<div class="w-8 h-8 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-xs shrink-0">${u.username.charAt(0).toUpperCase()}</div>`;
+                if (u.avatarBase64) {
+                    avatarHtml = `<img src="${u.avatarBase64}" class="w-8 h-8 rounded-full object-cover shrink-0">`;
+                }
+                let details = [];
+                if (u.age) details.push(u.age + ' yaş');
+                if (u.region) details.push(u.region);
+                const detailsStr = details.length > 0 ? ` (${details.join(', ')})` : '';
+
+                listEl.innerHTML += `
+                    <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-500 transition">
+                        <div class="flex items-center gap-3">
+                            ${avatarHtml}
+                            <div>
+                                <p class="font-bold text-slate-800 text-xs">${u.username}<span class="text-[10px] text-slate-500 font-normal">${detailsStr}</span></p>
+                                <p class="text-[10px] text-emerald-700 font-semibold">${u.points || 0} xal</p>
+                            </div>
+                        </div>
+                        <button onclick="openChatWithUser('${u.username}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow">💬 Mesaj yaz</button>
+                    </div>
+                `;
+            });
+        }
+
+        function filterParticipants() {
+            const query = document.getElementById('participantSearchInput').value.toLowerCase().trim();
+            const filtered = allParticipants.filter(u => u.username.toLowerCase().includes(query));
+            renderParticipants(filtered);
+        }
+
+        function openChatWithUser(username) {
+            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
+            if (username.toLowerCase() === currentUser.toLowerCase()) return alert('Özünüzə mesaj yaza bilməzsiniz.');
+            document.getElementById('chatModal').classList.remove('hidden');
+            startChatWith(username);
         }
 
         async function fetchChatUsers() {
@@ -560,6 +633,7 @@
                             fetchUserStats();
                             fetchLeaderboard();
                             fetchRecent();
+                            fetchParticipants();
                         } else {
                             alert('Xəta: ' + data.message);
                         }
