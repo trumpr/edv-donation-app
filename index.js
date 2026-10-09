@@ -154,7 +154,7 @@ app.get('/api/comments', (req, res) => {
 
 // API: Post a comment
 app.post('/api/comments', (req, res) => {
-    const { username, text } = req.body;
+    const { username, text, replyTo } = req.body;
     if (!username || !text || !text.trim()) {
         return res.status(400).json({ success: false, message: 'İstifadəçi adı və mətn tələb olunur.' });
     }
@@ -166,6 +166,7 @@ app.post('/api/comments', (req, res) => {
         id: Date.now().toString(),
         username: u,
         avatarBase64: userObj.avatarBase64 || '',
+        replyTo: replyTo || null,
         text: text.trim(),
         timestamp: new Date().toISOString()
     };

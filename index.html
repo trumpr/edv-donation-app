@@ -150,6 +150,13 @@
                         <div id="commentUserAvatar" class="w-7 h-7 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-xs shrink-0 overflow-hidden shadow-inner">?</div>
                         <span id="commentUsernameLabel" class="text-xs font-bold text-slate-700">Daxil olunmayıb</span>
                     </div>
+
+                    <!-- Reply Preview Box -->
+                    <div id="replyPreviewBox" class="hidden flex items-center justify-between bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 text-xs text-emerald-900">
+                        <span id="replyPreviewText">Kiməsə cavab yazırsınız</span>
+                        <button onclick="cancelReply()" class="text-red-600 font-bold hover:underline">✕ Ləğv et</button>
+                    </div>
+
                     <textarea id="commentTextInput" rows="2" placeholder="Fikir və rəylərinizi burada paylaşın..." class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm bg-slate-50"></textarea>
                     <button onclick="postComment()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl font-bold transition shadow text-sm">Rəy Bildir</button>
                 </div>
@@ -169,6 +176,7 @@
         let currentUser = localStorage.getItem('username') || '';
         let API_BASE = "https://thanksgiving-bought-mime-ozone.trycloudflare.com";
         let currentAvatarBase64 = '';
+        let activeReplyUser = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadConfig();
@@ -176,7 +184,6 @@
                 document.getElementById('usernameInput').value = currentUser;
                 showProfile();
                 fetchUserStats();
-                updateCommentBoxUser();
             }
             fetchCampaigns();
             fetchLeaderboard();
@@ -319,6 +326,7 @@
                     fetchUserStats();
                     fetchLeaderboard();
                     updateCommentBoxUser();
+                    fetchComments();
                 } else {
                     alert('Xəta: ' + data.message);
                 }
@@ -546,6 +554,11 @@
                         avatarHtml = `<img src="${c.avatarBase64}" onclick="openAvatarZoom('${c.avatarBase64.replace(/'/g, "\\'")}')" class="w-7 h-7 rounded-full object-cover shrink-0 cursor-pointer hover:scale-110 transition transform" title="Şəkli böyütmək üçün basın">`;
                     }
 
+                    let replyQuoteHtml = '';
+                    if (c.replyTo) {
+                        replyQuoteHtml = `<div class="bg-slate-100 text-[11px] text-slate-600 p-1.5 rounded-lg border-l-2 border-emerald-500 mb-1">↳ Cavab: <b>@${c.replyTo}</b></div>`;
+                    }
+
                     listEl.innerHTML += `
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
                             <div class="flex justify-between items-center">
@@ -558,6 +571,7 @@
                                     <span class="text-[10px] text-slate-400 font-normal">${timeStr}</span>
                                 </div>
                             </div>
+                            ${replyQuoteHtml}
                             <p class="text-slate-700 whitespace-pre-line pl-9">${escapeHtml(c.text)}</p>
                         </div>
                     `;
@@ -576,11 +590,12 @@
                 const res = await fetch(API_BASE + '/api/comments', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: currentUser, text })
+                    body: JSON.stringify({ username: currentUser, text, replyTo: activeReplyUser })
                 });
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById('commentTextInput').value = '';
+                    cancelReply();
                     fetchComments();
                 } else {
                     alert('Xəta: ' + data.message);
@@ -591,10 +606,20 @@
         }
 
         function replyToUser(username) {
+            activeReplyUser = username;
+            const box = document.getElementById('replyPreviewBox');
+            const text = document.getElementById('replyPreviewText');
+            text.innerHTML = `💬 <b>${username}</b> adlı şəxsə cavab yazırsınız`;
+            box.classList.remove('hidden');
+
             const textarea = document.getElementById('commentTextInput');
-            textarea.value = `@${username} `;
             textarea.focus();
             textarea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelReply() {
+            activeReplyUser = null;
+            document.getElementById('replyPreviewBox').classList.add('hidden');
         }
 
         function openAvatarZoom(imgUrl) {
