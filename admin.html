@@ -33,13 +33,13 @@
         <header class="bg-slate-900 text-white p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center shadow-lg gap-4">
             <div>
                 <h1 class="text-2xl font-extrabold">👑 Admin Panel</h1>
-                <p class="text-xs text-slate-400">İstifadəçilərin yüklədiyi çek şəkilləri</p>
+                <p class="text-xs text-slate-400">Canlı idarəetmə və çek izləmə</p>
             </div>
 
             <!-- Server Status Indicator -->
             <div id="serverStatus" class="flex items-center gap-2 bg-slate-800 px-3.5 py-2 rounded-xl border border-slate-700 text-xs font-semibold shadow-inner">
-                <span id="statusDot" class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
-                <span id="statusText" class="text-slate-300">Serverə qoşulur...</span>
+                <span id="statusDot" class="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
+                <span id="statusText" class="text-slate-300">Yoxlanılır...</span>
             </div>
 
             <div class="flex gap-2">
@@ -67,7 +67,7 @@
         <!-- Receipts Table -->
         <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
             <div class="p-5 border-b bg-slate-50 flex justify-between items-center">
-                <h2 class="font-bold text-slate-800">Göndərilən Çek Şəkilləri</h2>
+                <h2 class="font-bold text-slate-800">Göndərilən Çek Şəkilləri (Canlı Yenilənir)</h2>
                 <button onclick="loadAdminData()" class="bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-300">Yenilə</button>
             </div>
             <div class="overflow-x-auto">
@@ -93,6 +93,7 @@
         const ADMIN_PASS = "admin331234";
         let API_BASE = "https://thanksgiving-bought-mime-ozone.trycloudflare.com";
         let allReceipts = [];
+        let autoRefreshInterval = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
@@ -113,6 +114,7 @@
 
         function adminLogout() {
             sessionStorage.removeItem('isAdminLoggedIn');
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
             document.getElementById('adminDashboard').classList.add('hidden');
             document.getElementById('loginModal').classList.remove('hidden');
             document.getElementById('adminPasswordInput').value = '';
@@ -122,6 +124,10 @@
             document.getElementById('loginModal').classList.add('hidden');
             document.getElementById('adminDashboard').classList.remove('hidden');
             loadAdminData();
+
+            // Auto refresh data every 10 seconds
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(loadAdminData, 10000);
         }
 
         async function loadConfig() {
@@ -144,7 +150,7 @@
 
                 // Turn status indicator GREEN
                 document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-emerald-500";
-                document.getElementById('statusText').innerText = "Serverə qoşuludur (Online)";
+                document.getElementById('statusText').innerText = "Qoşuludur (Online)";
 
                 // Stats
                 document.getElementById('totalReceipts').innerText = allReceipts.length;
@@ -187,9 +193,8 @@
             } catch (e) {
                 // Turn status indicator RED
                 document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-red-500 animate-pulse";
-                document.getElementById('statusText').innerText = "Serverə qoşulmur (Offline)";
+                document.getElementById('statusText').innerText = "Qoşulmur (Offline)";
                 console.error(e);
-                alert('Admin məlumatları yüklənərkən xəta baş verdi.');
             }
         }
 
