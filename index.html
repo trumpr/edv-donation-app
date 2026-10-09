@@ -110,7 +110,7 @@
     <script>
         let currentUser = localStorage.getItem('username') || '';
         let html5QrCode = null;
-        let API_BASE = "";
+        let API_BASE = "https://games-particularly-amy-school.trycloudflare.com";
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadConfig();
@@ -132,7 +132,7 @@
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                API_BASE = "";
+                // Keep fallback
             }
         }
 
@@ -321,7 +321,7 @@
                     document.getElementById('readerContainer').classList.add('hidden');
                 });
             } else {
-                document.getElementById('readerContainer').classList.add('hidden');
+                document.getElementById('readerContainer'].classList.add('hidden');
             }
         }
     </script>
