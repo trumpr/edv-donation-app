@@ -22,7 +22,7 @@
                 <div id="loginSection">
                     <label class="block text-sm font-semibold mb-1 text-emerald-900">İştirakçı Adı:</label>
                     <div class="flex gap-2">
-                        <input type="text" id="usernameInput" placeholder="Məsələn: elnur123" class="flex-1 p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                        <input type="text" id="usernameInput" placeholder="Məsələn: elnur123" onkeydown="if(event.key === 'Enter') loginUser()" class="flex-1 p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                         <button onclick="loginUser()" class="bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow">Daxil ol</button>
                     </div>
                 </div>
@@ -56,7 +56,7 @@
 
                 <!-- Manual Code Input -->
                 <div class="pt-2 border-t border-slate-200 flex gap-2">
-                    <input type="text" id="manualCode" placeholder="və ya Çek F/K kodunu daxil edin..." class="flex-1 p-2.5 text-sm border border-slate-300 rounded-xl bg-white">
+                    <input type="text" id="manualCode" placeholder="və ya Çek F/K kodunu daxil edin..." onkeydown="if(event.key === 'Enter') submitManualCode()" class="flex-1 p-2.5 text-sm border border-slate-300 rounded-xl bg-white">
                     <button onclick="submitManualCode()" class="bg-slate-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-800">Çek Göndər</button>
                 </div>
 
@@ -321,7 +321,7 @@
                     document.getElementById('readerContainer').classList.add('hidden');
                 });
             } else {
-                document.getElementById('readerContainer'].classList.add('hidden');
+                document.getElementById('readerContainer').classList.add('hidden');
             }
         }
     </script>
