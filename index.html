@@ -14,6 +14,33 @@
             <p class="text-sm text-emerald-100 mt-1">EDV çekinizin şəklini çəkin, xeyriyyəyə dəstək olun!</p>
         </header>
 
+        <!-- Profile Modal -->
+        <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-white p-6 rounded-2xl max-w-sm w-full shadow-2xl space-y-4">
+                <h2 class="text-xl font-bold text-slate-900 text-center">👤 Profili Redaktə Et</h2>
+                <div class="flex flex-col items-center space-y-2">
+                    <div id="avatarPreviewContainer" class="w-20 h-20 rounded-full border-2 border-emerald-500 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow" onclick="document.getElementById('avatarFileInput').click()">
+                        <img id="avatarPreviewImg" src="" alt="Avatar" class="w-full h-full object-cover hidden">
+                        <span id="avatarPlaceholder" class="text-xs text-slate-400 font-semibold">Şəkil seç</span>
+                    </div>
+                    <input type="file" id="avatarFileInput" accept="image/*" class="hidden" onchange="handleAvatarSelect(event)">
+                    <p class="text-[11px] text-slate-500">Profil şəkli əlavə etmək üçün toxunun</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1 text-slate-700">Yaşınız:</label>
+                    <input type="number" id="profileAgeInput" placeholder="Məsələn: 25" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1 text-slate-700">Bölgəniz (Şəhər / Rayon):</label>
+                    <input type="text" id="profileRegionInput" placeholder="Məsələn: Bakı, Gəncə, Sumqayıt" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="saveProfile()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold hover:bg-emerald-700">Yadda saxla</button>
+                    <button onclick="closeProfileModal()" class="bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold hover:bg-slate-300">Bağla</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Content -->
         <main class="p-5 flex-1 space-y-6">
             <!-- User Login / Profile Section -->
@@ -26,12 +53,19 @@
                     </div>
                 </div>
                 <div id="profileSection" class="hidden flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-emerald-700 font-medium">Xoş gəldiniz,</p>
-                        <p class="text-lg font-bold text-emerald-900" id="displayUsername"></p>
-                        <p class="text-xs text-emerald-700 mt-0.5">Xallarınız: <span id="userPoints" class="font-bold">0</span> | Göndərilən Çeklər: <span id="userDonations" class="font-bold">0</span></p>
+                    <div class="flex items-center gap-3">
+                        <div id="headerAvatar" class="w-10 h-10 rounded-full border border-emerald-400 overflow-hidden bg-emerald-100 flex items-center justify-center font-bold text-emerald-800 shrink-0 shadow-inner">
+                            <!-- Initials or Avatar -->
+                        </div>
+                        <div>
+                            <p class="font-bold text-emerald-900" id="displayUsername"></p>
+                            <p class="text-xs text-emerald-700">Xallar: <span id="userPoints">0</span> | Çeklər: <span id="userDonations">0</span></p>
+                        </div>
                     </div>
-                    <button onclick="logout()" class="text-xs bg-white text-red-600 px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 font-semibold">Çıxış</button>
+                    <div class="flex gap-1.5">
+                        <button onclick="openProfileModal()" class="bg-emerald-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-700 shadow">👤 Profil</button>
+                        <button onclick="logout()" class="bg-red-100 text-red-600 px-2.5 py-1.5 rounded-xl text-xs font-bold hover:bg-red-200">Çıxış</button>
+                    </div>
                 </div>
             </div>
 
@@ -99,6 +133,7 @@
     <script>
         let currentUser = localStorage.getItem('username') || '';
         let API_BASE = "https://thanksgiving-bought-mime-ozone.trycloudflare.com";
+        let currentAvatarBase64 = '';
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadConfig();
@@ -146,6 +181,90 @@
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('profileSection').classList.remove('hidden');
             document.getElementById('displayUsername').innerText = currentUser;
+        }
+
+        function openProfileModal() {
+            document.getElementById('profileModal').classList.remove('hidden');
+            fetchUserStats().then(data => {
+                if (data) {
+                    document.getElementById('profileAgeInput').value = data.age || '';
+                    document.getElementById('profileRegionInput').value = data.region || '';
+                    if (data.avatarBase64) {
+                        currentAvatarBase64 = data.avatarBase64;
+                        const img = document.getElementById('avatarPreviewImg');
+                        img.src = currentAvatarBase64;
+                        img.classList.remove('hidden');
+                        document.getElementById('avatarPlaceholder').classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.add('hidden');
+        }
+
+        function handleAvatarSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 300;
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > height) {
+                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                    } else {
+                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    currentAvatarBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    const preview = document.getElementById('avatarPreviewImg');
+                    preview.src = currentAvatarBase64;
+                    preview.classList.remove('hidden');
+                    document.getElementById('avatarPlaceholder').classList.add('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function saveProfile() {
+            if (!currentUser) return;
+            const age = document.getElementById('profileAgeInput').value.trim();
+            const region = document.getElementById('profileRegionInput').value.trim();
+
+            try {
+                const res = await fetch(API_BASE + '/api/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUser,
+                        age,
+                        region,
+                        avatarBase64: currentAvatarBase64
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Profil yeniləndi!');
+                    closeProfileModal();
+                    fetchUserStats();
+                    fetchLeaderboard();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('Profil yadda saxlanılarkən xəta baş verdi.');
+            }
         }
 
         function triggerPhotoCapture() {
@@ -253,14 +372,23 @@
         }
 
         async function fetchUserStats() {
-            if (!currentUser) return;
+            if (!currentUser) return null;
             try {
                 const res = await fetch(API_BASE + `/api/user/${currentUser}`);
                 const data = await res.json();
                 document.getElementById('userPoints').innerText = data.points || 0;
                 document.getElementById('userDonations').innerText = data.donationsCount || 0;
+
+                const avatarEl = document.getElementById('headerAvatar');
+                if (data.avatarBase64) {
+                    avatarEl.innerHTML = `<img src="${data.avatarBase64}" class="w-full h-full object-cover">`;
+                } else {
+                    avatarEl.innerText = currentUser.charAt(0).toUpperCase();
+                }
+                return data;
             } catch (e) {
                 console.error(e);
+                return null;
             }
         }
 
@@ -275,9 +403,22 @@
                     return;
                 }
                 users.forEach((u, index) => {
+                    let avatarHtml = `<div class="w-7 h-7 rounded-full bg-amber-200 text-amber-900 font-bold flex items-center justify-center text-xs shrink-0">${u.username.charAt(0).toUpperCase()}</div>`;
+                    if (u.avatarBase64) {
+                        avatarHtml = `<img src="${u.avatarBase64}" class="w-7 h-7 rounded-full object-cover shrink-0">`;
+                    }
+                    let details = [];
+                    if (u.age) details.push(u.age + ' yaş');
+                    if (u.region) details.push(u.region);
+                    const detailsStr = details.length > 0 ? ` (${details.join(', ')})` : '';
+
                     listEl.innerHTML += `
                         <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-amber-100 shadow-xs">
-                            <span class="font-bold text-amber-900">${index + 1}. ${u.username}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-amber-900">${index + 1}.</span>
+                                ${avatarHtml}
+                                <span class="font-bold text-slate-800">${u.username}<span class="text-[10px] text-slate-500 font-normal">${detailsStr}</span></span>
+                            </div>
                             <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-md font-bold">${u.points} xal</span>
                         </div>
                     `;

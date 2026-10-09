@@ -45,7 +45,7 @@ app.post('/api/donate', (req, res) => {
 
     // Update user stats
     if (!storage.data.users[username]) {
-        storage.data.users[username] = { donationsCount: 0, totalDonated: 0, points: 0 };
+        storage.data.users[username] = { donationsCount: 0, totalDonated: 0, points: 0, age: '', region: '', avatarBase64: '' };
     }
     storage.data.users[username].donationsCount += 1;
     storage.data.users[username].totalDonated += receiptEntry.amount;
@@ -60,10 +60,36 @@ app.post('/api/donate', (req, res) => {
     });
 });
 
-// API: Get user stats
+// API: Update user profile
+app.post('/api/profile', (req, res) => {
+    const { username, age, region, avatarBase64 } = req.body;
+    if (!username) {
+        return res.status(400).json({ success: false, message: 'İstifadəçi adı tələb olunur.' });
+    }
+
+    const u = username.trim();
+    if (!storage.data.users[u]) {
+        storage.data.users[u] = { donationsCount: 0, totalDonated: 0, points: 0, age: '', region: '', avatarBase64: '' };
+    }
+
+    storage.data.users[u].age = age || '';
+    storage.data.users[u].region = region || '';
+    if (avatarBase64) {
+        storage.data.users[u].avatarBase64 = avatarBase64;
+    }
+    storage.saveUsers();
+
+    res.json({
+        success: true,
+        message: 'Profil uğurla yeniləndi.',
+        user: storage.data.users[u]
+    });
+});
+
+// API: Get user stats & profile
 app.get('/api/user/:username', (req, res) => {
     const username = req.params.username.trim();
-    const user = storage.data.users[username] || { donationsCount: 0, totalDonated: 0, points: 0 };
+    const user = storage.data.users[username] || { donationsCount: 0, totalDonated: 0, points: 0, age: '', region: '', avatarBase64: '' };
     res.json(user);
 });
 
