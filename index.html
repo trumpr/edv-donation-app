@@ -177,6 +177,7 @@
         let API_BASE = "https://thanksgiving-bought-mime-ozone.trycloudflare.com";
         let currentAvatarBase64 = '';
         let activeReplyUser = null;
+        let activeReplyAvatar = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadConfig();
@@ -542,7 +543,7 @@
                 const res = await fetch(API_BASE + '/api/comments');
                 const comments = await res.json();
                 const listEl = document.getElementById('commentsList');
-                listEl.innerHTML = ``;
+                listEl.innerHTML = '';
                 if (comments.length === 0) {
                     listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center">Hələ rəy yazılmayıb. İlk rəyi siz yazın!</p>';
                     return;
@@ -556,12 +557,20 @@
 
                     let replyQuoteHtml = '';
                     if (c.replyTo) {
+                        let replyAvatarHtml = `<div class="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-[9px] shrink-0">${c.replyTo.charAt(0).toUpperCase()}</div>`;
+                        if (c.replyToAvatar) {
+                            replyAvatarHtml = `<img src="${c.replyToAvatar}" class="w-4 h-4 rounded-full object-cover shrink-0">`;
+                        }
                         replyQuoteHtml = `
                             <div class="flex items-center gap-1.5 bg-emerald-50 text-emerald-900 px-2.5 py-1 rounded-lg text-[11px] mb-1.5 w-fit border border-emerald-200 font-medium">
-                                <span>↩</span> <span><strong>${c.replyTo}</strong> adlı şəxsə cavab</span>
+                                <span>↩</span>
+                                ${replyAvatarHtml}
+                                <span><strong>${c.replyTo}</strong> adlı şəxsə cavab</span>
                             </div>
                         `;
                     }
+
+                    const safeAvatarForReply = c.avatarBase64 ? c.avatarBase64.replace(/'/g, "\\'") : '';
 
                     listEl.innerHTML += `
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
@@ -571,7 +580,7 @@
                                     <span>${c.username}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <button onclick="replyToUser('${c.username}')" class="text-[10px] text-emerald-600 hover:underline font-semibold">💬 Cavab yaz</button>
+                                    <button onclick="replyToUser('${c.username}', '${safeAvatarForReply}')" class="text-[10px] text-emerald-600 hover:underline font-semibold">💬 Cavab yaz</button>
                                     <span class="text-[10px] text-slate-400 font-normal">${timeStr}</span>
                                 </div>
                             </div>
@@ -594,7 +603,12 @@
                 const res = await fetch(API_BASE + '/api/comments', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: currentUser, text, replyTo: activeReplyUser })
+                    body: JSON.stringify({
+                        username: currentUser,
+                        text,
+                        replyTo: activeReplyUser,
+                        replyToAvatar: activeReplyAvatar
+                    })
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -609,11 +623,18 @@
             }
         }
 
-        function replyToUser(username) {
+        function replyToUser(username, avatar) {
             activeReplyUser = username;
+            activeReplyAvatar = avatar || null;
             const box = document.getElementById('replyPreviewBox');
+
+            let replyAvatarHtml = `<div class="w-5 h-5 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-[10px] shrink-0">${username.charAt(0).toUpperCase()}</div>`;
+            if (activeReplyAvatar) {
+                replyAvatarHtml = `<img src="${activeReplyAvatar}" class="w-5 h-5 rounded-full object-cover shrink-0">`;
+            }
+
             const text = document.getElementById('replyPreviewText');
-            text.innerHTML = `💬 <b>${username}</b> adlı şəxsə cavab yazırsınız`;
+            text.innerHTML = `<div class="flex items-center gap-2"><span>💬</span> ${replyAvatarHtml} <span><b>${username}</b> adlı şəxsə cavab yazırsınız</span></div>`;
             box.classList.remove('hidden');
 
             const textarea = document.getElementById('commentTextInput');
@@ -623,6 +644,7 @@
 
         function cancelReply() {
             activeReplyUser = null;
+            activeReplyAvatar = null;
             document.getElementById('replyPreviewBox').classList.add('hidden');
         }
 
