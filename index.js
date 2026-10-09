@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '10mb' }));
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname)));
 
 // API: Get campaigns
 app.get('/api/campaigns', (req, res) => {
@@ -62,7 +62,7 @@ app.post('/api/donate', (req, res) => {
 // API: Get user stats
 app.get('/api/user/:username', (req, res) => {
     const username = req.params.username.trim();
-    const user = storage.data.users[username] || { donationsCount: 0, totalDonated: 0, points: 0 };
+    const user = storage.data.users[username] || { donationsCount: 0, totalDonations: 0, points: 0 };
     res.json(user);
 });
 
