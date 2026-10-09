@@ -17,12 +17,24 @@
         </div>
     </div>
 
+    <!-- QR Code Zoom Modal -->
+    <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center p-4 z-50" onclick="closeQrModal()">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+            <h3 class="font-bold text-slate-800 text-lg">📷 Çek QR Kodu</h3>
+            <div class="flex justify-center bg-slate-50 p-4 rounded-xl border">
+                <img id="modalQrImg" src="" alt="Large QR" class="w-64 h-64 object-contain">
+            </div>
+            <p id="modalQrLink" class="font-mono text-xs text-blue-600 truncate"></p>
+            <button onclick="closeQrModal()" class="w-full bg-slate-900 text-white py-2.5 rounded-xl font-bold hover:bg-slate-800">Bağla</button>
+        </div>
+    </div>
+
     <!-- Admin Dashboard -->
     <div id="adminDashboard" class="max-w-6xl mx-auto space-y-6 hidden">
         <header class="bg-slate-900 text-white p-6 rounded-2xl flex justify-between items-center shadow-lg">
             <div>
                 <h1 class="text-2xl font-extrabold">👑 Admin Panel</h1>
-                <p class="text-xs text-slate-400">Çeklərin QR kodlarını birbaşa ekrandan skan edin</p>
+                <p class="text-xs text-slate-400">QR kodun üzərinə basaraq böyüdə bilərsiniz</p>
             </div>
             <div class="flex gap-2">
                 <a href="/" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700">Ana Səhifə</a>
@@ -49,7 +61,7 @@
         <!-- Receipts Table -->
         <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
             <div class="p-5 border-b bg-slate-50 flex justify-between items-center">
-                <h2 class="font-bold text-slate-800">Göndərilən Bütün Çeklər (QR Kodlar)</h2>
+                <h2 class="font-bold text-slate-800">Göndərilən Bütün Çeklər</h2>
                 <button onclick="loadAdminData()" class="bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-300">Yenilə</button>
             </div>
             <div class="overflow-x-auto">
@@ -143,6 +155,7 @@
                     const timeStr = new Date(r.timestamp).toLocaleString();
                     const safeData = r.qrData.replace(/'/g, "\\'");
                     const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(r.qrData)}`;
+                    const qrLargeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(r.qrData)}`;
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50">
@@ -151,7 +164,7 @@
                             <td class="p-3 text-xs text-slate-600">${campaignTitle}</td>
                             <td class="p-3">
                                 <div class="flex items-center gap-3 bg-blue-50 p-2.5 rounded-xl border border-blue-100 max-w-md">
-                                    <img src="${qrImgUrl}" alt="QR" class="w-16 h-16 rounded-lg border bg-white p-1 shrink-0 shadow-sm">
+                                    <img src="${qrImgUrl}" alt="QR" onclick="openQrModal('${qrLargeUrl}', '${safeData}')" class="w-16 h-16 rounded-lg border bg-white p-1 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">
                                     <div class="overflow-hidden space-y-1">
                                         <a href="${r.qrData}" target="_blank" class="font-mono text-[11px] text-blue-600 underline block truncate" title="${r.qrData}">${r.qrData}</a>
                                         <button onclick="copyToClipboard('${safeData}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow">Linki Kopyala</button>
@@ -166,6 +179,16 @@
                 console.error(e);
                 alert('Admin məlumatları yüklənərkən xəta baş verdi.');
             }
+        }
+
+        function openQrModal(imgUrl, linkText) {
+            document.getElementById('modalQrImg').src = imgUrl;
+            document.getElementById('modalQrLink').innerText = linkText;
+            document.getElementById('qrModal').classList.remove('hidden');
+        }
+
+        function closeQrModal() {
+            document.getElementById('qrModal').classList.add('hidden');
         }
 
         function copyToClipboard(text) {
