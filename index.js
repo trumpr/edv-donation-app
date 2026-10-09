@@ -62,7 +62,7 @@ app.post('/api/donate', (req, res) => {
 // API: Get user stats
 app.get('/api/user/:username', (req, res) => {
     const username = req.params.username.trim();
-    const user = storage.data.users[username] || { donationsCount: 0, totalDonations: 0, points: 0 };
+    const user = storage.data.users[username] || { donationsCount: 0, totalDonated: 0, points: 0 };
     res.json(user);
 });
 
@@ -79,6 +79,15 @@ app.get('/api/leaderboard', (req, res) => {
         .sort((a, b) => b.points - a.points)
         .slice(0, 5);
     res.json(users);
+});
+
+// API: Admin data overview
+app.get('/api/admin/data', (req, res) => {
+    res.json({
+        receipts: storage.data.receipts,
+        users: storage.data.users,
+        campaigns: storage.data.campaigns
+    });
 });
 
 app.listen(PORT, '0.0.0.0', () => {

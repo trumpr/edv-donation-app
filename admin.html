@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çek Fondu - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans p-4 sm:p-6">
+    <!-- Password Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full shadow-2xl space-y-4">
+            <h2 class="text-xl font-bold text-slate-900 text-center">🔐 Admin Girişi</h2>
+            <p class="text-xs text-slate-500 text-center">Zəhmət olmasa admin parolunu daxil edin.</p>
+            <input type="password" id="adminPasswordInput" placeholder="Parol..." class="w-full p-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900">
+            <button onclick="checkAdminPassword()" class="w-full bg-slate-900 text-white p-3 rounded-xl font-bold hover:bg-slate-800 transition">Daxil ol</button>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="max-w-4xl mx-auto space-y-6 hidden">
+        <header class="bg-slate-900 text-white p-6 rounded-2xl flex justify-between items-center shadow-lg">
+            <div>
+                <h1 class="text-2xl font-extrabold">👑 Admin Panel</h1>
+                <p class="text-xs text-slate-400">Göndərilən çekləri və ianələri izləyin</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="/" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700">Ana Səhifə</a>
+                <button onclick="adminLogout()" class="bg-red-600 px-3 py-2 rounded-xl text-sm font-bold hover:bg-red-700">Çıxış</button>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                <p class="text-xs text-slate-500 font-semibold">Ümumi Çek / İanə Sayı</p>
+                <p class="text-2xl font-black text-slate-900 mt-1" id="totalReceipts">0</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                <p class="text-xs text-slate-500 font-semibold">Qeydiyyatda Olan İstifadəçilər</p>
+                <p class="text-2xl font-black text-emerald-600 mt-1" id="totalUsers">0</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                <p class="text-xs text-slate-500 font-semibold">Yığılan Ümumi Məbləğ</p>
+                <p class="text-2xl font-black text-blue-600 mt-1" id="totalAmount">0 AZN</p>
+            </div>
+        </div>
+
+        <!-- Receipts Table -->
+        <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+            <div class="p-5 border-b bg-slate-50 flex justify-between items-center">
+                <h2 class="font-bold text-slate-800">Göndərilən Bütün Çeklər</h2>
+                <button onclick="loadAdminData()" class="bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-300">Yenilə</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+                        <tr>
+                            <th class="p-3">Vaxt</th>
+                            <th class="p-3">İştirakçı</th>
+                            <th class="p-3">Kampaniya</th>
+                            <th class="p-3">Çek Kodu / QR</th>
+                            <th class="p-3">Məbləğ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receiptsTableBody" class="divide-y divide-slate-200">
+                        <!-- Dynamic rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PASS = "admin331234";
+        let API_BASE = "";
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+                showDashboard();
+            }
+            await loadConfig();
+        });
+
+        function checkAdminPassword() {
+            const pass = document.getElementById('adminPasswordInput').value;
+            if (pass === ADMIN_PASS) {
+                sessionStorage.setItem('isAdminLoggedIn', 'true');
+                showDashboard();
+            } else {
+                alert('Yanlış parol!');
+            }
+        }
+
+        function adminLogout() {
+            sessionStorage.removeItem('isAdminLoggedIn');
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('adminPasswordInput').value = '';
+        }
+
+        function showDashboard() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            loadAdminData();
+        }
+
+        async function loadConfig() {
+            try {
+                const res = await fetch('./config.json');
+                const config = await res.json();
+                if (config && config.apiUrl) {
+                    API_BASE = config.apiUrl;
+                }
+            } catch (e) {
+                API_BASE = "";
+            }
+        }
+
+        async function loadAdminData() {
+            try {
+                const res = await fetch(API_BASE + '/api/admin/data');
+                const data = await res.json();
+
+                // Stats
+                document.getElementById('totalReceipts').innerText = data.receipts.length;
+                document.getElementById('totalUsers').innerText = Object.keys(data.users).length;
+
+                let totalAmount = data.campaigns.reduce((sum, c) => sum + c.current, 0);
+                document.getElementById('totalAmount').innerText = totalAmount + ' AZN';
+
+                // Table
+                const tbody = document.getElementById('receiptsTableBody');
+                tbody.innerHTML = '';
+                if (data.receipts.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Hələ heç bir çek göndərilməyib.</td></tr>`;
+                    return;
+                }
+
+                data.receipts.slice().reverse().forEach(r => {
+                    const campaign = data.campaigns.find(c => c.id === r.campaignId);
+                    const campaignTitle = campaign ? campaignTitleShort(campaign.title) : 'Naməlum';
+                    const timeStr = new Date(r.timestamp).toLocaleString();
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 text-xs text-slate-500">${timeStr}</td>
+                            <td class="p-3 font-bold text-slate-800">${r.username}</td>
+                            <td class="p-3 text-xs text-slate-600">${campaignTitle}</td>
+                            <td class="p-3 font-mono text-xs text-blue-600 bg-blue-50 rounded">${r.qrData}</td>
+                            <td class="p-3 font-bold text-emerald-600">+${r.amount} AZN</td>
+                        </tr>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+                alert('Admin məlumatları yüklənərkən xəta baş verdi.');
+            }
+        }
+
+        function campaignTitleShort(title) {
+            return title.length > 25 ? title.substring(0, 25) + '...' : title;
+        }
+    </script>
+</body>
+</html>
