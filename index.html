@@ -542,7 +542,7 @@
                 const res = await fetch(API_BASE + '/api/comments');
                 const comments = await res.json();
                 const listEl = document.getElementById('commentsList');
-                listEl.innerHTML = '';
+                listEl.innerHTML = ``;
                 if (comments.length === 0) {
                     listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center">Hələ rəy yazılmayıb. İlk rəyi siz yazın!</p>';
                     return;
@@ -556,7 +556,11 @@
 
                     let replyQuoteHtml = '';
                     if (c.replyTo) {
-                        replyQuoteHtml = `<div class="bg-slate-100 text-[11px] text-slate-600 p-1.5 rounded-lg border-l-2 border-emerald-500 mb-1">↳ Cavab: <b>@${c.replyTo}</b></div>`;
+                        replyQuoteHtml = `
+                            <div class="flex items-center gap-1.5 bg-emerald-50 text-emerald-900 px-2.5 py-1 rounded-lg text-[11px] mb-1.5 w-fit border border-emerald-200 font-medium">
+                                <span>↩</span> <span><strong>${c.replyTo}</strong> adlı şəxsə cavab</span>
+                            </div>
+                        `;
                     }
 
                     listEl.innerHTML += `
@@ -584,7 +588,7 @@
         async function postComment() {
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             const text = document.getElementById('commentTextInput').value.trim();
-            if (!text) return alert('Zəhmət olmasa rəy mətnini daxil edin');
+            if (!text) return alert('Zəhmət olmasa rəy mətnini dain edin');
 
             try {
                 const res = await fetch(API_BASE + '/api/comments', {
