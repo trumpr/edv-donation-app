@@ -17,15 +17,14 @@
         </div>
     </div>
 
-    <!-- QR Code Zoom Modal -->
-    <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center p-4 z-50" onclick="closeQrModal()">
-        <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center space-y-4 shadow-2xl" onclick="event.stopPropagation()">
-            <h3 class="font-bold text-slate-800 text-lg">📷 Çek QR Kodu</h3>
-            <div class="flex justify-center bg-slate-50 p-4 rounded-xl border">
-                <img id="modalQrImg" src="" alt="Large QR" class="w-64 h-64 object-contain">
+    <!-- Image Zoom Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center p-4 z-50" onclick="closeImageModal()">
+        <div class="bg-white p-4 rounded-2xl max-w-lg w-full text-center space-y-4 shadow-2xl max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+            <h3 class="font-bold text-slate-800 text-lg">📸 Çek Şəkli</h3>
+            <div class="flex-1 overflow-auto bg-slate-50 p-2 rounded-xl border flex items-center justify-center">
+                <img id="modalReceiptImg" src="" alt="Full Receipt" class="max-w-full max-h-[70vh] object-contain rounded">
             </div>
-            <p id="modalQrLink" class="font-mono text-xs text-blue-600 truncate"></p>
-            <button onclick="closeQrModal()" class="w-full bg-slate-900 text-white py-2.5 rounded-xl font-bold hover:bg-slate-800">Bağla</button>
+            <button onclick="closeImageModal()" class="w-full bg-slate-900 text-white py-2.5 rounded-xl font-bold hover:bg-slate-800">Bağla</button>
         </div>
     </div>
 
@@ -34,7 +33,7 @@
         <header class="bg-slate-900 text-white p-6 rounded-2xl flex justify-between items-center shadow-lg">
             <div>
                 <h1 class="text-2xl font-extrabold">👑 Admin Panel</h1>
-                <p class="text-xs text-slate-400">QR kodun üzərinə basaraq böyüdə bilərsiniz</p>
+                <p class="text-xs text-slate-400">İstifadəçilərin yüklədiyi çek şəkilləri</p>
             </div>
             <div class="flex gap-2">
                 <a href="/" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700">Ana Səhifə</a>
@@ -45,7 +44,7 @@
         <!-- Stats Overview -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="bg-white p-5 rounded-2xl border shadow-sm">
-                <p class="text-xs text-slate-500 font-semibold">Ümumi Çek / İanə Sayı</p>
+                <p class="text-xs text-slate-500 font-semibold">Ümumi Çek Şəkli Sayı</p>
                 <p class="text-2xl font-black text-slate-900 mt-1" id="totalReceipts">0</p>
             </div>
             <div class="bg-white p-5 rounded-2xl border shadow-sm">
@@ -61,7 +60,7 @@
         <!-- Receipts Table -->
         <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
             <div class="p-5 border-b bg-slate-50 flex justify-between items-center">
-                <h2 class="font-bold text-slate-800">Göndərilən Bütün Çeklər</h2>
+                <h2 class="font-bold text-slate-800">Göndərilən Çek Şəkilləri</h2>
                 <button onclick="loadAdminData()" class="bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-300">Yenilə</button>
             </div>
             <div class="overflow-x-auto">
@@ -71,7 +70,7 @@
                             <th class="p-3">Vaxt</th>
                             <th class="p-3">İştirakçı</th>
                             <th class="p-3">Kampaniya</th>
-                            <th class="p-3">Çekin QR Kodu</th>
+                            <th class="p-3">Çek Şəkli</th>
                             <th class="p-3">Məbləğ</th>
                         </tr>
                     </thead>
@@ -145,7 +144,7 @@
                 const tbody = document.getElementById('receiptsTableBody');
                 tbody.innerHTML = '';
                 if (data.receipts.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Hələ heç bir çek göndərilməyib.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Hələ heç bir çek şəkli göndərilməyib.</td></tr>`;
                     return;
                 }
 
@@ -153,9 +152,11 @@
                     const campaign = data.campaigns.find(c => c.id === r.campaignId);
                     const campaignTitle = campaign ? campaignTitleShort(campaign.title) : 'Naməlum';
                     const timeStr = new Date(r.timestamp).toLocaleString();
-                    const safeData = r.qrData.replace(/'/g, "\\'");
-                    const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(r.qrData)}`;
-                    const qrLargeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(r.qrData)}`;
+
+                    let receiptMedia = `<span class="text-xs text-slate-400 italic">Şəkil yoxdur</span>`;
+                    if (r.imageBase64) {
+                        receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal('${r.imageBase64}')" class="w-20 h-20 object-cover rounded-xl border bg-white p-1 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
+                    }
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50">
@@ -163,13 +164,7 @@
                             <td class="p-3 font-bold text-slate-800">${r.username}</td>
                             <td class="p-3 text-xs text-slate-600">${campaignTitle}</td>
                             <td class="p-3">
-                                <div class="flex items-center gap-3 bg-blue-50 p-2.5 rounded-xl border border-blue-100 max-w-md">
-                                    <img src="${qrImgUrl}" alt="QR" onclick="openQrModal('${qrLargeUrl}', '${safeData}')" class="w-16 h-16 rounded-lg border bg-white p-1 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">
-                                    <div class="overflow-hidden space-y-1">
-                                        <a href="${r.qrData}" target="_blank" class="font-mono text-[11px] text-blue-600 underline block truncate" title="${r.qrData}">${r.qrData}</a>
-                                        <button onclick="copyToClipboard('${safeData}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow">Linki Kopyala</button>
-                                    </div>
-                                </div>
+                                ${receiptMedia}
                             </td>
                             <td class="p-3 font-bold text-emerald-600 whitespace-nowrap">+${r.amount} AZN</td>
                         </tr>
@@ -181,23 +176,13 @@
             }
         }
 
-        function openQrModal(imgUrl, linkText) {
-            document.getElementById('modalQrImg').src = imgUrl;
-            document.getElementById('modalQrLink').innerText = linkText;
-            document.getElementById('qrModal').classList.remove('hidden');
+        function openImageModal(imgUrl) {
+            document.getElementById('modalReceiptImg').src = imgUrl;
+            document.getElementById('imageModal').classList.remove('hidden');
         }
 
-        function closeQrModal() {
-            document.getElementById('qrModal').classList.add('hidden');
-        }
-
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('✅ Çek linki kopyalandı!');
-            }).catch(err => {
-                console.error('Kopyalama xətası: ', err);
-                alert('Kopyalamaq mümkün olmadı.');
-            });
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
         }
 
         function campaignTitleShort(title) {

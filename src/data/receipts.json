@@ -22,5 +22,13 @@
     "qrData": "He vufufufufugugugug",
     "amount": 1,
     "timestamp": "2026-10-09T13:52:03.900Z"
+  },
+  {
+    "id": "1791567989050",
+    "username": "Eldar",
+    "campaignId": "1",
+    "qrData": "https://monitoring.e-kassa.gov.az/#/index?doc=5A4GU4xHUYygAbzzy8H3C4W9YDuzBCuj1Q1xwDqddAxE",
+    "amount": 1,
+    "timestamp": "2026-10-09T17:46:29.050Z"
   }
 ]

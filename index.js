@@ -6,7 +6,7 @@ const storage = require('./src/data/storage');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '15mb' }));
 app.use(cors());
 app.use(express.static(path.join(__dirname)));
 
@@ -15,9 +15,9 @@ app.get('/api/campaigns', (req, res) => {
     res.json(storage.data.campaigns);
 });
 
-// API: Submit receipt or donation
+// API: Submit receipt photo or donation
 app.post('/api/donate', (req, res) => {
-    const { username, campaignId, qrData, amount } = req.body;
+    const { username, campaignId, qrData, amount, imageBase64 } = req.body;
 
     if (!username) {
         return res.status(400).json({ success: false, message: 'İstifadəçi adı tələb olunur.' });
@@ -27,7 +27,8 @@ app.post('/api/donate', (req, res) => {
         id: Date.now().toString(),
         username: username.trim(),
         campaignId: campaignId || '1',
-        qrData: qrData || 'manual_donation',
+        qrData: qrData || 'Çek Şəkli',
+        imageBase64: imageBase64 || null,
         amount: parseFloat(amount) || 1.0,
         timestamp: new Date().toISOString()
     };
@@ -48,12 +49,12 @@ app.post('/api/donate', (req, res) => {
     }
     storage.data.users[username].donationsCount += 1;
     storage.data.users[username].totalDonated += receiptEntry.amount;
-    storage.data.users[username].points += 10; // 10 points per donation/receipt
+    storage.data.users[username].points += 10; // 10 points per receipt photo
     storage.saveUsers();
 
     res.json({
         success: true,
-        message: 'Təşəkkürlər! İanəniz/Çekiniz qeydə alındı.',
+        message: 'Təşəkkürlər! Çek şəkliniz uğurla qeydə alındı.',
         user: storage.data.users[username],
         campaign
     });

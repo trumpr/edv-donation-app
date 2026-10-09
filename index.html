@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Çek Fondu - EDV ilə Dəstək Ol</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans pb-10">
     <div class="max-w-xl mx-auto min-h-screen bg-white shadow-xl flex flex-col justify-between rounded-2xl my-0 sm:my-6 overflow-hidden">
         <!-- Header -->
         <header class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-6 text-center shadow-lg">
             <h1 class="text-3xl font-extrabold tracking-tight">Çek İanə Fondu</h1>
-            <p class="text-sm text-emerald-100 mt-1">EDV çeklərinizi bağışlayın, xeyriyyəyə dəstək olun!</p>
+            <p class="text-sm text-emerald-100 mt-1">EDV çekinizin şəklini çəkin, xeyriyyəyə dəstək olun!</p>
         </header>
 
         <!-- Main Content -->
@@ -36,10 +35,10 @@
                 </div>
             </div>
 
-            <!-- Campaign Selector & Scanner Section -->
+            <!-- Campaign Selector & Photo Upload Section -->
             <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span>🎯</span> Kampaniya Seçin və Çek Göndərin
+                    <span>🎯</span> Kampaniya Seçin və Çek Şəkli Göndərin
                 </h2>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Dəstəkləmək istədiyiniz məqsəd:</label>
@@ -49,21 +48,11 @@
                 </div>
 
                 <div class="pt-2">
-                    <button onclick="startScanner()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow text-base">
-                        <span>📷</span> Çekin QR Kodunu Skan Et
+                    <input type="file" id="receiptPhotoInput" accept="image/*" capture="environment" class="hidden" onchange="uploadReceiptPhoto(event)">
+                    <button onclick="triggerPhotoCapture()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-bold transition flex items-center justify-center gap-3 shadow-lg text-lg">
+                        <span>📸</span> Çekin Şəklini Çək / Yüklə
                     </button>
-                </div>
-
-                <!-- Manual Code Input -->
-                <div class="pt-2 border-t border-slate-200 flex gap-2">
-                    <input type="text" id="manualCode" placeholder="və ya Çek F/K kodunu daxil edin..." onkeydown="if(event.key === 'Enter') submitManualCode()" class="flex-1 p-2.5 text-sm border border-slate-300 rounded-xl bg-white">
-                    <button onclick="submitManualCode()" class="bg-slate-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-800">Çek Göndər</button>
-                </div>
-
-                <!-- QR Scanner Container -->
-                <div id="readerContainer" class="hidden relative bg-black rounded-xl overflow-hidden mt-3">
-                    <div id="reader" class="w-full"></div>
-                    <button onclick="stopScanner()" class="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold z-10">Bağla</button>
+                    <p class="text-[11px] text-slate-500 text-center mt-2">Telefon kamerası ilə birbaşa çekin şəklini çəkib göndərə bilərsiniz.</p>
                 </div>
             </div>
 
@@ -109,7 +98,6 @@
 
     <script>
         let currentUser = localStorage.getItem('username') || '';
-        let html5QrCode = null;
         let API_BASE = "https://games-particularly-amy-school.trycloudflare.com";
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -158,6 +146,50 @@
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('profileSection').classList.remove('hidden');
             document.getElementById('displayUsername').innerText = currentUser;
+        }
+
+        function triggerPhotoCapture() {
+            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
+            document.getElementById('receiptPhotoInput').click();
+        }
+
+        async function uploadReceiptPhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Image = e.target.result;
+                const campaignId = document.getElementById('campaignSelect').value;
+
+                try {
+                    const res = await fetch(API_BASE + '/api/donate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: currentUser,
+                            campaignId,
+                            amount: 1.0,
+                            qrData: 'Çek Şəkli',
+                            imageBase64: base64Image
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        alert(data.message);
+                        event.target.value = ''; // Reset input
+                        fetchCampaigns();
+                        fetchUserStats();
+                        fetchLeaderboard();
+                        fetchRecent();
+                    } else {
+                        alert('Xəta: ' + data.message);
+                    }
+                } catch (err) {
+                    alert('Şəkil göndərilərkən xəta baş verdi.');
+                }
+            };
+            reader.readAsDataURL(file);
         }
 
         async function fetchCampaigns() {
@@ -235,93 +267,20 @@
                 const listEl = document.getElementById('recentList');
                 listEl.innerHTML = '';
                 if (recent.length === 0) {
-                    listEl.innerHTML = '<p class="text-teal-700 italic">Hələ çek göndərilməyib.</p>';
+                    listEl.innerHTML = '<p class="text-teal-700 italic">Hələ çek şəkli göndərilməyib.</p>';
                     return;
                 }
                 recent.forEach(r => {
                     const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     listEl.innerHTML += `
                         <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-teal-100 shadow-xs">
-                            <span class="font-medium text-teal-900">${r.username} (Çek qeydə alındı)</span>
+                            <span class="font-medium text-teal-900">${r.username} (Çek şəkli qeydə alındı)</span>
                             <span class="text-slate-400">${timeStr}</span>
                         </div>
                     `;
                 });
             } catch (e) {
                 console.error(e);
-            }
-        }
-
-        async function submitManualCode() {
-            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
-            const code = document.getElementById('manualCode').value.trim();
-            if (!code) return alert('Zəhmət olmasa çek kodunu daxil edin');
-            const campaignId = document.getElementById('campaignSelect').value;
-
-            try {
-                const res = await fetch(API_BASE + '/api/donate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: currentUser, campaignId, amount: 1.0, qrData: code })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert(data.message);
-                    document.getElementById('manualCode').value = '';
-                    fetchCampaigns();
-                    fetchUserStats();
-                    fetchLeaderboard();
-                    fetchRecent();
-                }
-            } catch (e) {
-                alert('Xəta baş verdi');
-            }
-        }
-
-        async function startScanner() {
-            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
-            const container = document.getElementById('readerContainer');
-            container.classList.remove('hidden');
-
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
-            html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                async (decodedText) => {
-                    stopScanner();
-                    const campaignId = document.getElementById('campaignSelect').value;
-                    const res = await fetch(API_BASE + '/api/donate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: currentUser, campaignId, amount: 1.0, qrData: decodedText })
-                    });
-                    const data = await res.json();
-                    alert(data.message);
-                    fetchCampaigns();
-                    fetchUserStats();
-                    fetchLeaderboard();
-                    fetchRecent();
-                },
-                (errorMessage) => {
-                    // Scanning ongoing
-                }
-            ).catch(err => {
-                alert('Kamera açılmadı və ya icazə verilmədi: ' + err);
-                container.classList.add('hidden');
-            });
-        }
-
-        function stopScanner() {
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    document.getElementById('readerContainer').classList.add('hidden');
-                }).catch(err => {
-                    document.getElementById('readerContainer').classList.add('hidden');
-                });
-            } else {
-                document.getElementById('readerContainer').classList.add('hidden');
             }
         }
     </script>
