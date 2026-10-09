@@ -60,7 +60,7 @@
                     <h3 class="font-bold text-emerald-900 text-sm">🔑 Giriş və ya Qeydiyyat</h3>
                     <div>
                         <label class="block text-xs font-semibold mb-1 text-emerald-900">İştirakçı Adı:</label>
-                        <input type="text" id="usernameInput" placeholder="Məsələn: elnur123" onkeydown="if(event.key === 'Enter') loginUser()" class="w-full p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                        <input type="text" id="usernameInput" placeholder="Məsələn: elnur123" class="w-full p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1 text-emerald-900">4-rəqəmli PIN (Parol):</label>
@@ -527,7 +527,10 @@
                                     ${avatarHtml}
                                     <span>${c.username}</span>
                                 </div>
-                                <span class="text-[10px] text-slate-400 font-normal">${timeStr}</span>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="replyToUser('${c.username}')" class="text-[10px] text-emerald-600 hover:underline font-semibold">💬 Cavab yaz</button>
+                                    <span class="text-[10px] text-slate-400 font-normal">${timeStr}</span>
+                                </div>
                             </div>
                             <p class="text-slate-700 whitespace-pre-line pl-9">${escapeHtml(c.text)}</p>
                         </div>
@@ -559,6 +562,13 @@
             } catch (e) {
                 alert('Rəy göndərilərkən xəta baş verdi.');
             }
+        }
+
+        function replyToUser(username) {
+            const textarea = document.getElementById('commentTextInput');
+            textarea.value = `@${username} `;
+            textarea.focus();
+            textarea.scrollIntoView({ behavior: 'smooth' });
         }
 
         function openAvatarZoom(imgUrl) {
