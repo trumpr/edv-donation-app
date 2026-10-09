@@ -22,7 +22,7 @@
         <header class="bg-slate-900 text-white p-6 rounded-2xl flex justify-between items-center shadow-lg">
             <div>
                 <h1 class="text-2xl font-extrabold">👑 Admin Panel</h1>
-                <p class="text-xs text-slate-400">Çeklərin QR linkləri və məlumatları</p>
+                <p class="text-xs text-slate-400">Çeklərin QR kodlarını birbaşa ekrandan skan edin</p>
             </div>
             <div class="flex gap-2">
                 <a href="/" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700">Ana Səhifə</a>
@@ -49,7 +49,7 @@
         <!-- Receipts Table -->
         <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
             <div class="p-5 border-b bg-slate-50 flex justify-between items-center">
-                <h2 class="font-bold text-slate-800">Göndərilən Bütün Çeklər</h2>
+                <h2 class="font-bold text-slate-800">Göndərilən Bütün Çeklər (QR Kodlar)</h2>
                 <button onclick="loadAdminData()" class="bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-300">Yenilə</button>
             </div>
             <div class="overflow-x-auto">
@@ -59,7 +59,7 @@
                             <th class="p-3">Vaxt</th>
                             <th class="p-3">İştirakçı</th>
                             <th class="p-3">Kampaniya</th>
-                            <th class="p-3">Çek Məlumatı / Link</th>
+                            <th class="p-3">Çekin QR Kodu</th>
                             <th class="p-3">Məbləğ</th>
                         </tr>
                     </thead>
@@ -142,11 +142,7 @@
                     const campaignTitle = campaign ? campaignTitleShort(campaign.title) : 'Naməlum';
                     const timeStr = new Date(r.timestamp).toLocaleString();
                     const safeData = r.qrData.replace(/'/g, "\\'");
-
-                    let linkHtml = `<span class="font-mono text-xs text-slate-700 truncate max-w-xs" title="${r.qrData}">${r.qrData}</span>`;
-                    if (r.qrData.startsWith('http')) {
-                        linkHtml = `<a href="${r.qrData}" target="_blank" class="font-mono text-xs text-blue-600 underline truncate max-w-xs" title="${r.qrData}">${r.qrData}</a>`;
-                    }
+                    const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(r.qrData)}`;
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50">
@@ -154,9 +150,12 @@
                             <td class="p-3 font-bold text-slate-800">${r.username}</td>
                             <td class="p-3 text-xs text-slate-600">${campaignTitle}</td>
                             <td class="p-3">
-                                <div class="flex items-center gap-2 bg-blue-50 p-2 rounded-xl border border-blue-100 max-w-md">
-                                    ${linkHtml}
-                                    <button onclick="copyToClipboard('${safeData}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow shrink-0">Kopyala</button>
+                                <div class="flex items-center gap-3 bg-blue-50 p-2.5 rounded-xl border border-blue-100 max-w-md">
+                                    <img src="${qrImgUrl}" alt="QR" class="w-16 h-16 rounded-lg border bg-white p-1 shrink-0 shadow-sm">
+                                    <div class="overflow-hidden space-y-1">
+                                        <a href="${r.qrData}" target="_blank" class="font-mono text-[11px] text-blue-600 underline block truncate" title="${r.qrData}">${r.qrData}</a>
+                                        <button onclick="copyToClipboard('${safeData}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow">Linki Kopyala</button>
+                                    </div>
                                 </div>
                             </td>
                             <td class="p-3 font-bold text-emerald-600 whitespace-nowrap">+${r.amount} AZN</td>
@@ -171,7 +170,7 @@
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                alert('✅ Tam çek linki kopyalandı:\n' + text);
+                alert('✅ Çek linki kopyalandı!');
             }).catch(err => {
                 console.error('Kopyalama xətası: ', err);
                 alert('Kopyalamaq mümkün olmadı.');
