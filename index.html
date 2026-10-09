@@ -45,13 +45,19 @@
         <main class="p-5 flex-1 space-y-6">
             <!-- User Login / Profile Section -->
             <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 shadow-sm">
-                <div id="loginSection">
-                    <label class="block text-sm font-semibold mb-1 text-emerald-900">İştirakçı Adı:</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="usernameInput" placeholder="Məsələn: elnur123" onkeydown="if(event.key === 'Enter') loginUser()" class="flex-1 p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
-                        <button onclick="loginUser()" class="bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow">Daxil ol</button>
+                <div id="loginSection" class="space-y-3">
+                    <h3 class="font-bold text-emerald-900 text-sm">🔑 Giriş və ya Qeydiyyat</h3>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1 text-emerald-900">İştirakçı Adı:</label>
+                        <input type="text" id="usernameInput" placeholder="Məsələn: elnur123" class="w-full p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1 text-emerald-900">4-rəqəmli PIN (Parol):</label>
+                        <input type="password" id="pinInput" maxlength="4" placeholder="••••" onkeydown="if(event.key === 'Enter') loginUser()" class="w-full p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white tracking-widest text-center text-lg font-bold">
+                    </div>
+                    <button onclick="loginUser()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow">Daxil ol / Qeydiyyat</button>
                 </div>
+
                 <div id="profileSection" class="hidden flex justify-between items-center">
                     <div class="flex items-center gap-3">
                         <div id="headerAvatar" class="w-10 h-10 rounded-full border border-emerald-400 overflow-hidden bg-emerald-100 flex items-center justify-center font-bold text-emerald-800 shrink-0 shadow-inner">
@@ -159,15 +165,33 @@
             }
         }
 
-        function loginUser() {
-            const val = document.getElementById('usernameInput').value.trim();
-            if (!val) return alert('Zəhmət olmasa iştirakçı adı daxil edin');
-            currentUser = val;
-            localStorage.setItem('username', currentUser);
-            showProfile();
-            fetchUserStats();
-            fetchLeaderboard();
-            fetchRecent();
+        async function loginUser() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const pin = document.getElementById('pinInput').value.trim();
+
+            if (!username) return alert('Zəhmət olmasa iştirakçı adı daxil edin');
+            if (!pin || pin.length !== 4) return alert('Zəhmət olmasa 4-rəqəmli PIN (parol) daxil edin');
+
+            try {
+                const res = await fetch(API_BASE + '/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, pin })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentUser = username;
+                    localStorage.setItem('username', currentUser);
+                    showProfile();
+                    fetchUserStats();
+                    fetchLeaderboard();
+                    fetchRecent();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('Giriş zamanı xəta baş verdi.');
+            }
         }
 
         function logout() {
@@ -175,6 +199,7 @@
             currentUser = '';
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('profileSection').classList.add('hidden');
+            document.getElementById('pinInput').value = '';
         }
 
         function showProfile() {

@@ -15,6 +15,45 @@ app.get('/api/campaigns', (req, res) => {
     res.json(storage.data.campaigns);
 });
 
+// API: Login or Register with 4-digit PIN
+app.post('/api/login', (req, res) => {
+    const { username, pin } = req.body;
+    if (!username || !pin) {
+        return res.status(400).json({ success: false, message: 'İstifadəçi adı və 4-rəqəmli PIN tələb olunur.' });
+    }
+    if (pin.length !== 4 || isNaN(pin)) {
+        return res.status(400).json({ success: false, message: 'PIN tam 4 rəqəmli olmalıdır.' });
+    }
+
+    const u = username.trim();
+    if (!storage.data.users[u]) {
+        // New user registration
+        storage.data.users[u] = {
+            pin: pin,
+            donationsCount: 0,
+            totalDonated: 0,
+            points: 0,
+            age: '',
+            region: '',
+            avatarBase64: ''
+        };
+        storage.saveUsers();
+        return res.json({ success: true, message: 'Qeydiyyat uğurla tamamlandı!', user: storage.data.users[u] });
+    }
+
+    // Existing user login
+    if (storage.data.users[u].pin && storage.data.users[u].pin !== pin) {
+        return res.json({ success: false, message: 'Yanlış 4-rəqəmli PIN!' });
+    }
+
+    if (!storage.data.users[u].pin) {
+        storage.data.users[u].pin = pin;
+        storage.saveUsers();
+    }
+
+    res.json({ success: true, message: 'Uğurla daxil oldunuz!', user: storage.data.users[u] });
+});
+
 // API: Submit receipt photo or donation
 app.post('/api/donate', (req, res) => {
     const { username, campaignId, qrData, amount, imageBase64 } = req.body;
@@ -45,7 +84,7 @@ app.post('/api/donate', (req, res) => {
 
     // Update user stats
     if (!storage.data.users[username]) {
-        storage.data.users[username] = { donationsCount: 0, totalDonated: 0, points: 0, age: '', region: '', avatarBase64: '' };
+        storage.data.users[username] = { pin: '0000', donationsCount: 0, totalDonated: 0, points: 0, age: '', region: '', avatarBase64: '' };
     }
     storage.data.users[username].donationsCount += 1;
     storage.data.users[username].totalDonated += receiptEntry.amount;
@@ -69,7 +108,7 @@ app.post('/api/profile', (req, res) => {
 
     const u = username.trim();
     if (!storage.data.users[u]) {
-        storage.data.users[u] = { donationsCount: 0, totalDonated: 0, points: 0, age: '', region: '', avatarBase64: '' };
+        storage.data.users[u] = { pin: '0000', donationsCount: 0, totalDonated: 0, points: 0, age: '', region: '', avatarBase64: '' };
     }
 
     storage.data.users[u].age = age || '';
