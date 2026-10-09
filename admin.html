@@ -85,6 +85,7 @@
     <script>
         const ADMIN_PASS = "admin331234";
         let API_BASE = "https://games-particularly-amy-school.trycloudflare.com";
+        let allReceipts = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
@@ -132,30 +133,32 @@
             try {
                 const res = await fetch(API_BASE + '/api/admin/data');
                 const data = await res.json();
+                allReceipts = data.receipts || [];
 
                 // Stats
-                document.getElementById('totalReceipts').innerText = data.receipts.length;
-                document.getElementById('totalUsers').innerText = Object.keys(data.users).length;
+                document.getElementById('totalReceipts').innerText = allReceipts.length;
+                document.getElementById('totalUsers').innerText = Object.keys(data.users || {}).length;
 
-                let totalAmount = data.campaigns.reduce((sum, c) => sum + c.current, 0);
+                let totalAmount = (data.campaigns || []).reduce((sum, c) => sum + c.current, 0);
                 document.getElementById('totalAmount').innerText = totalAmount + ' AZN';
 
                 // Table
                 const tbody = document.getElementById('receiptsTableBody');
                 tbody.innerHTML = '';
-                if (data.receipts.length === 0) {
+                if (allReceipts.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Hələ heç bir çek şəkli göndərilməyib.</td></tr>`;
                     return;
                 }
 
-                data.receipts.slice().reverse().forEach(r => {
-                    const campaign = data.campaigns.find(c => c.id === r.campaignId);
+                allReceipts.slice().reverse().forEach((r, idx) => {
+                    const actualIndex = allReceipts.length - 1 - idx;
+                    const campaign = (data.campaigns || []).find(c => c.id === r.campaignId);
                     const campaignTitle = campaign ? campaignTitleShort(campaign.title) : 'Naməlum';
                     const timeStr = new Date(r.timestamp).toLocaleString();
 
                     let receiptMedia = `<span class="text-xs text-slate-400 italic">Şəkil yoxdur</span>`;
                     if (r.imageBase64) {
-                        receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal('${r.imageBase64}')" class="w-20 h-20 object-cover rounded-xl border bg-white p-1 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
+                        receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal(${actualIndex})" class="w-20 h-20 object-cover rounded-xl border bg-white p-1 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
                     }
 
                     tbody.innerHTML += `
@@ -176,9 +179,12 @@
             }
         }
 
-        function openImageModal(imgUrl) {
-            document.getElementById('modalReceiptImg').src = imgUrl;
-            document.getElementById('imageModal').classList.remove('hidden');
+        function openImageModal(index) {
+            const r = allReceipts[index];
+            if (r && r.imageBase64) {
+                document.getElementById('modalReceiptImg').src = r.imageBase64;
+                document.getElementById('imageModal').classList.remove('hidden');
+            }
         }
 
         function closeImageModal() {

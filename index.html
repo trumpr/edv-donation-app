@@ -52,7 +52,7 @@
                     <button onclick="triggerPhotoCapture()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-bold transition flex items-center justify-center gap-3 shadow-lg text-lg">
                         <span>📸</span> Çekin Şəklini Çək / Yüklə
                     </button>
-                    <p class="text-[11px] text-slate-500 text-center mt-2">Telefon kamerası ilə birbaşa çekin şəklini çəkib göndərə bilərsiniz.</p>
+                    <p class="text-[11px] text-slate-500 text-center mt-2">Şəkil avtomatik optimallaşdırılaraq adminə göndəriləcək.</p>
                 </div>
             </div>
 
@@ -153,41 +153,68 @@
             document.getElementById('receiptPhotoInput').click();
         }
 
-        async function uploadReceiptPhoto(event) {
+        function uploadReceiptPhoto(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = async function(e) {
-                const base64Image = e.target.result;
-                const campaignId = document.getElementById('campaignSelect').value;
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = async function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
 
-                try {
-                    const res = await fetch(API_BASE + '/api/donate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: currentUser,
-                            campaignId,
-                            amount: 1.0,
-                            qrData: 'Çek Şəkli',
-                            imageBase64: base64Image
-                        })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        alert(data.message);
-                        event.target.value = ''; // Reset input
-                        fetchCampaigns();
-                        fetchUserStats();
-                        fetchLeaderboard();
-                        fetchRecent();
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
                     } else {
-                        alert('Xəta: ' + data.message);
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
                     }
-                } catch (err) {
-                    alert('Şəkil göndərilərkən xəta baş verdi.');
-                }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    const campaignId = document.getElementById('campaignSelect').value;
+
+                    try {
+                        const res = await fetch(API_BASE + '/api/donate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: currentUser,
+                                campaignId,
+                                amount: 1.0,
+                                qrData: 'Çek Şəkli',
+                                imageBase64: compressedBase64
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            alert(data.message);
+                            event.target.value = '';
+                            fetchCampaigns();
+                            fetchUserStats();
+                            fetchLeaderboard();
+                            fetchRecent();
+                        } else {
+                            alert('Xəta: ' + data.message);
+                        }
+                    } catch (err) {
+                        alert('Şəkil göndərilərkən xəta baş verdi.');
+                    }
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
