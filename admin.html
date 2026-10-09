@@ -68,7 +68,10 @@
         <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
             <div class="p-5 border-b bg-slate-50 flex justify-between items-center">
                 <h2 class="font-bold text-slate-800">Göndərilən Çek Şəkilləri (Canlı Yenilənir)</h2>
-                <button onclick="loadAdminData()" class="bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-300">Yenilə</button>
+                <div class="flex gap-2">
+                    <button onclick="clearAllReceipts()" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-200 transition">🗑️ Çekləri Təmizlə</button>
+                    <button onclick="loadAdminData()" class="bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-300">Yenilə</button>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
@@ -195,6 +198,24 @@
                 document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-red-500 animate-pulse";
                 document.getElementById('statusText').innerText = "Qoşulmur (Offline)";
                 console.error(e);
+            }
+        }
+
+        async function clearAllReceipts() {
+            if (!confirm('Bütün göndərilən çekləri silmək istədiyinizə əminsiniz?')) return;
+            try {
+                const res = await fetch(API_BASE + '/api/admin/clear-receipts', {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Bütün çeklər təmizləndi.');
+                    loadAdminData();
+                } else {
+                    alert('Xəta baş verdi.');
+                }
+            } catch (e) {
+                alert('Sorğu xətası.');
             }
         }
 

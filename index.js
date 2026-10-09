@@ -91,6 +91,13 @@ app.get('/api/admin/data', (req, res) => {
     });
 });
 
+// API: Clear all receipts
+app.post('/api/admin/clear-receipts', (req, res) => {
+    storage.data.receipts = [];
+    storage.saveReceipts();
+    res.json({ success: true, message: 'Bütün çeklər təmizləndi.' });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 EDV Donation Server işləyir: http://localhost:${PORT}`);
 });
