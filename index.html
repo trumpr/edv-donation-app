@@ -49,7 +49,7 @@
                     <h3 class="font-bold text-emerald-900 text-sm">🔑 Giriş və ya Qeydiyyat</h3>
                     <div>
                         <label class="block text-xs font-semibold mb-1 text-emerald-900">İştirakçı Adı:</label>
-                        <input type="text" id="usernameInput" placeholder="Məsələn: elnur123" class="w-full p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                        <input type="text" id="usernameInput" placeholder="Məsələn: elnur123" onkeydown="if(event.key === 'Enter') loginUser()" class="w-full p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1 text-emerald-900">4-rəqəmli PIN (Parol):</label>
@@ -540,7 +540,6 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    document.getElementById('commentTextInput.value = ''');
                     document.getElementById('commentTextInput').value = '';
                     fetchComments();
                 } else {
