@@ -204,6 +204,16 @@ app.get('/api/messages', (req, res) => {
     res.json(conversation);
 });
 
+// API: Check unread messages for user
+app.get('/api/unread', (req, res) => {
+    const { username } = req.query;
+    if (!username) return res.json({ count: 0, messages: [] });
+
+    const u = username.trim().toLowerCase();
+    const incoming = storage.data.messages.filter(m => m.receiver.toLowerCase() === u);
+    res.json({ count: incoming.length, messages: incoming });
+});
+
 // API: Send private message
 app.post('/api/messages', (req, res) => {
     const { sender, receiver, text } = req.body;

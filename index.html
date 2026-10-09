@@ -114,7 +114,9 @@
                         </div>
                     </div>
                     <div class="flex gap-1.5 flex-wrap">
-                        <button onclick="openChatModal()" class="bg-blue-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-700 shadow">📩 Mesajlar</button>
+                        <button onclick="openChatModal()" class="relative bg-blue-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-700 shadow">
+                            📩 Mesajlar <span id="msgNotificationBadge" class="hidden absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                        </button>
                         <button onclick="openProfileModal()" class="bg-emerald-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-700 shadow">👤 Profil</button>
                         <button onclick="logout()" class="bg-red-100 text-red-600 px-2.5 py-1.5 rounded-xl text-xs font-bold hover:bg-red-200">Çıxış</button>
                     </div>
@@ -229,7 +231,9 @@
         let allComments = [];
         let activeChatUser = null;
         let chatInterval = null;
+        let notifInterval = null;
         let allParticipants = [];
+        let lastKnownMsgCount = 0;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadConfig();
@@ -237,6 +241,7 @@
                 document.getElementById('usernameInput').value = currentUser;
                 showProfile();
                 fetchUserStats();
+                startNotificationPolling();
             }
             fetchCampaigns();
             fetchLeaderboard();
@@ -280,6 +285,7 @@
                     fetchRecent();
                     fetchParticipants();
                     updateCommentBoxUser();
+                    startNotificationPolling();
                 } else {
                     alert('Xəta: ' + data.message);
                 }
@@ -294,6 +300,7 @@
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('profileSection').classList.add('hidden');
             document.getElementById('pinInput').value = '';
+            if (notifInterval) clearInterval(notifInterval);
             updateCommentBoxUser();
         }
 
@@ -391,10 +398,35 @@
             }
         }
 
+        // Notification Polling
+        function startNotificationPolling() {
+            if (notifInterval) clearInterval(notifInterval);
+            notifInterval = setInterval(checkUnreadMessages, 5000);
+        }
+
+        async function checkUnreadMessages() {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(API_BASE + `/api/unread?username=${currentUser}`);
+                const data = await res.json();
+                const badge = document.getElementById('msgNotificationBadge');
+
+                if (lastKnownMsgCount > 0 && data.count > lastKnownMsgCount) {
+                    badge.classList.remove('hidden');
+                } else if (lastKnownMsgCount === 0 && data.count > 0) {
+                    badge.classList.remove('hidden');
+                }
+                lastKnownMsgCount = data.count;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
         // Chat & Participants Functions
         function openChatModal() {
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             document.getElementById('chatModal').classList.remove('hidden');
+            document.getElementById('msgNotificationBadge').classList.add('hidden');
             showChatUserSelect();
             fetchChatUsers();
         }
@@ -457,6 +489,7 @@
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             if (username.toLowerCase() === currentUser.toLowerCase()) return alert('Özünüzə mesaj yaza bilməzsiniz.');
             document.getElementById('chatModal').classList.remove('hidden');
+            document.getElementById('msgNotificationBadge').classList.add('hidden');
             startChatWith(username);
         }
 
