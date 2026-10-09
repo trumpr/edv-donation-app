@@ -178,6 +178,7 @@
         let currentAvatarBase64 = '';
         let activeReplyUser = null;
         let activeReplyAvatar = null;
+        let allComments = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadConfig();
@@ -542,13 +543,15 @@
             try {
                 const res = await fetch(API_BASE + '/api/comments');
                 const comments = await res.json();
+                allComments = comments || [];
                 const listEl = document.getElementById('commentsList');
                 listEl.innerHTML = '';
-                if (comments.length === 0) {
+                if (allComments.length === 0) {
                     listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center">Hələ rəy yazılmayıb. İlk rəyi siz yazın!</p>';
                     return;
                 }
-                comments.slice().reverse().forEach(c => {
+                allComments.slice().reverse().forEach((c, idx) => {
+                    const actualIndex = allComments.length - 1 - idx;
                     const timeStr = new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     let avatarHtml = `<div class="w-7 h-7 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-xs shrink-0">${c.username.charAt(0).toUpperCase()}</div>`;
                     if (c.avatarBase64) {
@@ -570,8 +573,6 @@
                         `;
                     }
 
-                    const safeAvatarForReply = c.avatarBase64 ? c.avatarBase64.replace(/'/g, "\\'") : '';
-
                     listEl.innerHTML += `
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
                             <div class="flex justify-between items-center">
@@ -580,7 +581,7 @@
                                     <span>${c.username}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <button onclick="replyToUser('${c.username}', '${safeAvatarForReply}')" class="text-[10px] text-emerald-600 hover:underline font-semibold">💬 Cavab yaz</button>
+                                    <button onclick="replyToUser(${actualIndex})" class="text-[10px] text-emerald-600 hover:underline font-semibold">💬 Cavab yaz</button>
                                     <span class="text-[10px] text-slate-400 font-normal">${timeStr}</span>
                                 </div>
                             </div>
@@ -597,7 +598,7 @@
         async function postComment() {
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             const text = document.getElementById('commentTextInput').value.trim();
-            if (!text) return alert('Zəhmət olmasa rəy mətnini dain edin');
+            if (!text) return alert('Zəhmət olmasa rəy mətnini daxil edin');
 
             try {
                 const res = await fetch(API_BASE + '/api/comments', {
@@ -623,18 +624,21 @@
             }
         }
 
-        function replyToUser(username, avatar) {
-            activeReplyUser = username;
-            activeReplyAvatar = avatar || null;
+        function replyToUser(index) {
+            const targetComment = allComments[index];
+            if (!targetComment) return;
+
+            activeReplyUser = targetComment.username;
+            activeReplyAvatar = targetComment.avatarBase64 || null;
             const box = document.getElementById('replyPreviewBox');
 
-            let replyAvatarHtml = `<div class="w-5 h-5 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-[10px] shrink-0">${username.charAt(0).toUpperCase()}</div>`;
+            let replyAvatarHtml = `<div class="w-5 h-5 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-[10px] shrink-0">${activeReplyUser.charAt(0).toUpperCase()}</div>`;
             if (activeReplyAvatar) {
                 replyAvatarHtml = `<img src="${activeReplyAvatar}" class="w-5 h-5 rounded-full object-cover shrink-0">`;
             }
 
             const text = document.getElementById('replyPreviewText');
-            text.innerHTML = `<div class="flex items-center gap-2"><span>💬</span> ${replyAvatarHtml} <span><b>${username}</b> adlı şəxsə cavab yazırsınız</span></div>`;
+            text.innerHTML = `<div class="flex items-center gap-2"><span>💬</span> ${replyAvatarHtml} <span><b>${activeReplyUser}</b> adlı şəxsə cavab yazırsınız</span></div>`;
             box.classList.remove('hidden');
 
             const textarea = document.getElementById('commentTextInput');

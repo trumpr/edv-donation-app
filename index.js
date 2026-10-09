@@ -99,7 +99,7 @@ app.post('/api/donate', (req, res) => {
     });
 });
 
-// API: Update user profile
+// API: Update user profile and sync avatar across past comments
 app.post('/api/profile', (req, res) => {
     const { username, age, region, avatarBase64 } = req.body;
     if (!username) {
@@ -115,6 +115,17 @@ app.post('/api/profile', (req, res) => {
     storage.data.users[u].region = region || '';
     if (avatarBase64) {
         storage.data.users[u].avatarBase64 = avatarBase64;
+
+        // Sync avatar across all past comments and replies by this user
+        storage.data.comments.forEach(c => {
+            if (c.username.toLowerCase() === u.toLowerCase()) {
+                c.avatarBase64 = avatarBase64;
+            }
+            if (c.replyTo && c.replyTo.toLowerCase() === u.toLowerCase()) {
+                c.replyToAvatar = avatarBase64;
+            }
+        });
+        storage.saveComments();
     }
     storage.saveUsers();
 
