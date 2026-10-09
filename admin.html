@@ -18,11 +18,11 @@
     </div>
 
     <!-- Admin Dashboard -->
-    <div id="adminDashboard" class="max-w-5xl mx-auto space-y-6 hidden">
+    <div id="adminDashboard" class="max-w-6xl mx-auto space-y-6 hidden">
         <header class="bg-slate-900 text-white p-6 rounded-2xl flex justify-between items-center shadow-lg">
             <div>
                 <h1 class="text-2xl font-extrabold">👑 Admin Panel</h1>
-                <p class="text-xs text-slate-400">Çekin yalnız fiskal kodunu kopyalayın</p>
+                <p class="text-xs text-slate-400">Çeklərin QR linkləri və məlumatları</p>
             </div>
             <div class="flex gap-2">
                 <a href="/" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700">Ana Səhifə</a>
@@ -59,7 +59,7 @@
                             <th class="p-3">Vaxt</th>
                             <th class="p-3">İştirakçı</th>
                             <th class="p-3">Kampaniya</th>
-                            <th class="p-3">Fiskal Kod</th>
+                            <th class="p-3">Çek Məlumatı / Link</th>
                             <th class="p-3">Məbləğ</th>
                         </tr>
                     </thead>
@@ -117,15 +117,6 @@
             }
         }
 
-        function extractFiscalCode(data) {
-            if (!data) return '';
-            if (data.includes('doc=')) {
-                const parts = data.split('doc=');
-                return parts[1] ? parts[1].split('&')[0] : data;
-            }
-            return data;
-        }
-
         async function loadAdminData() {
             try {
                 const res = await fetch(API_BASE + '/api/admin/data');
@@ -150,8 +141,12 @@
                     const campaign = data.campaigns.find(c => c.id === r.campaignId);
                     const campaignTitle = campaign ? campaignTitleShort(campaign.title) : 'Naməlum';
                     const timeStr = new Date(r.timestamp).toLocaleString();
-                    const fiscalCode = extractFiscalCode(r.qrData);
-                    const safeFiscalCode = fiscalCode.replace(/'/g, "\\'");
+                    const safeData = r.qrData.replace(/'/g, "\\'");
+
+                    let linkHtml = `<span class="font-mono text-xs text-slate-700 truncate max-w-xs" title="${r.qrData}">${r.qrData}</span>`;
+                    if (r.qrData.startsWith('http')) {
+                        linkHtml = `<a href="${r.qrData}" target="_blank" class="font-mono text-xs text-blue-600 underline truncate max-w-xs" title="${r.qrData}">${r.qrData}</a>`;
+                    }
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50">
@@ -159,9 +154,9 @@
                             <td class="p-3 font-bold text-slate-800">${r.username}</td>
                             <td class="p-3 text-xs text-slate-600">${campaignTitle}</td>
                             <td class="p-3">
-                                <div class="flex items-center gap-2 bg-blue-50 p-2 rounded-xl border border-blue-100">
-                                    <span class="font-mono text-xs text-blue-700 truncate max-w-xs" title="${fiscalCode}">${fiscalCode}</span>
-                                    <button onclick="copyToClipboard('${safeFiscalCode}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow shrink-0">Kopyala</button>
+                                <div class="flex items-center gap-2 bg-blue-50 p-2 rounded-xl border border-blue-100 max-w-md">
+                                    ${linkHtml}
+                                    <button onclick="copyToClipboard('${safeData}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow shrink-0">Kopyala</button>
                                 </div>
                             </td>
                             <td class="p-3 font-bold text-emerald-600 whitespace-nowrap">+${r.amount} AZN</td>
@@ -176,7 +171,7 @@
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                alert('✅ Fiskal kod kopyalandı:\n' + text);
+                alert('✅ Tam çek linki kopyalandı:\n' + text);
             }).catch(err => {
                 console.error('Kopyalama xətası: ', err);
                 alert('Kopyalamaq mümkün olmadı.');
