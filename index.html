@@ -241,7 +241,6 @@
                 document.getElementById('usernameInput').value = currentUser;
                 showProfile();
                 fetchUserStats();
-                startNotificationPolling();
             }
             fetchCampaigns();
             fetchLeaderboard();
@@ -565,9 +564,11 @@
                     const isMe = m.sender.toLowerCase() === currentUser.toLowerCase();
                     const bubbleAlign = isMe ? 'ml-auto bg-emerald-600 text-white rounded-br-none' : 'mr-auto bg-white text-slate-800 border rounded-bl-none';
                     const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const senderLabel = !isMe ? `<p class="font-bold text-[10px] text-emerald-800 mb-0.5">${m.sender}</p>` : '';
 
                     listEl.innerHTML += `
                         <div class="max-w-[75%] ${bubbleAlign} p-3 rounded-2xl text-xs space-y-1 shadow-xs">
+                            ${senderLabel}
                             <p class="whitespace-pre-line">${escapeHtml(m.text)}</p>
                             <p class="text-[9px] text-right ${isMe ? 'text-emerald-200' : 'text-slate-400'}">${timeStr}</p>
                         </div>
@@ -666,7 +667,6 @@
                             fetchUserStats();
                             fetchLeaderboard();
                             fetchRecent();
-                            fetchParticipants();
                         } else {
                             alert('Xəta: ' + data.message);
                         }
@@ -869,7 +869,7 @@
         async function postComment() {
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             const text = document.getElementById('commentTextInput').value.trim();
-            if (!text) return alert('Zəhmət olmasa rəy mətnini daxil edin');
+            if (!text) return alert('Zəhmət olmasa rəy mətnini dain edin');
 
             try {
                 const res = await fetch(API_BASE + '/api/comments', {
