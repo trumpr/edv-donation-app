@@ -41,6 +41,17 @@
             </div>
         </div>
 
+        <!-- Avatar Zoom Modal -->
+        <div id="avatarZoomModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center p-4 z-50" onclick="closeAvatarZoom()">
+            <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+                <h3 class="font-bold text-slate-800 text-lg">📷 Profil Şəkli</h3>
+                <div class="flex justify-center bg-slate-50 p-4 rounded-xl border">
+                    <img id="modalAvatarImg" src="" alt="Full Avatar" class="w-64 h-64 object-cover rounded-full shadow">
+                </div>
+                <button onclick="closeAvatarZoom()" class="w-full bg-slate-900 text-white py-2.5 rounded-xl font-bold hover:bg-slate-800">Bağla</button>
+            </div>
+        </div>
+
         <!-- Main Content -->
         <main class="p-5 flex-1 space-y-6">
             <!-- User Login / Profile Section -->
@@ -506,7 +517,7 @@
                     const timeStr = new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     let avatarHtml = `<div class="w-7 h-7 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-xs shrink-0">${c.username.charAt(0).toUpperCase()}</div>`;
                     if (c.avatarBase64) {
-                        avatarHtml = `<img src="${c.avatarBase64}" class="w-7 h-7 rounded-full object-cover shrink-0">`;
+                        avatarHtml = `<img src="${c.avatarBase64}" onclick="openAvatarZoom('${c.avatarBase64.replace(/'/g, "\\'")}')" class="w-7 h-7 rounded-full object-cover shrink-0 cursor-pointer hover:scale-110 transition transform" title="Şəkli böyütmək üçün basın">`;
                     }
 
                     listEl.innerHTML += `
@@ -548,6 +559,15 @@
             } catch (e) {
                 alert('Rəy göndərilərkən xəta baş verdi.');
             }
+        }
+
+        function openAvatarZoom(imgUrl) {
+            document.getElementById('modalAvatarImg').src = imgUrl;
+            document.getElementById('avatarZoomModal').classList.remove('hidden');
+        }
+
+        function closeAvatarZoom() {
+            document.getElementById('avatarZoomModal').classList.add('hidden');
         }
 
         function escapeHtml(text) {
