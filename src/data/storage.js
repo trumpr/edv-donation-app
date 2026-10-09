@@ -5,6 +5,7 @@ const CAMPAIGNS_FILE = path.join(__dirname, 'campaigns.json');
 const RECEIPTS_FILE = path.join(__dirname, 'receipts.json');
 const USERS_FILE = path.join(__dirname, 'users.json');
 const COMMENTS_FILE = path.join(__dirname, 'comments.json');
+const MESSAGES_FILE = path.join(__dirname, 'messages.json');
 
 function readJson(file, defaultVal) {
     if (!fs.existsSync(file)) {
@@ -26,7 +27,8 @@ const data = {
     campaigns: readJson(CAMPAIGNS_FILE, []),
     receipts: readJson(RECEIPTS_FILE, []),
     users: readJson(USERS_FILE, {}),
-    comments: readJson(COMMENTS_FILE, [])
+    comments: readJson(COMMENTS_FILE, []),
+    messages: readJson(MESSAGES_FILE, [])
 };
 
 function saveReceipts() {
@@ -45,10 +47,15 @@ function saveComments() {
     writeJson(COMMENTS_FILE, data.comments);
 }
 
+function saveMessages() {
+    writeJson(MESSAGES_FILE, data.messages);
+}
+
 module.exports = {
     data,
     saveReceipts,
     saveCampaigns,
     saveUsers,
-    saveComments
+    saveComments,
+    saveMessages
 };

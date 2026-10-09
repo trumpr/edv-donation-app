@@ -19,7 +19,7 @@ app.get('/api/campaigns', (req, res) => {
 app.post('/api/login', (req, res) => {
     const { username, pin } = req.body;
     if (!username || !pin) {
-        return res.status(400).json({ success: false, message: 'İstifadəçi adı və 4-rəqəmli PIN tələb olunur.' });
+        return res.status(400).json({ success: false, message: 'İştirakçı adı və 4-rəqəmli PIN tələb olunur.' });
     }
     if (pin.length !== 4 || isNaN(pin)) {
         return res.status(400).json({ success: false, message: 'PIN tam 4 rəqəmli olmalıdır.' });
@@ -153,8 +153,7 @@ app.get('/api/recent', (req, res) => {
 app.get('/api/leaderboard', (req, res) => {
     const users = Object.entries(storage.data.users)
         .map(([username, stats]) => ({ username, ...stats }))
-        .sort((a, b) => b.points - a.points)
-        .slice(0, 5);
+        .sort((a, b) => b.points - a.points);
     res.json(users);
 });
 
@@ -189,13 +188,51 @@ app.post('/api/comments', (req, res) => {
     res.json({ success: true, message: 'Komment əlavə olundu.', comment: newComment });
 });
 
+// API: Get private messages between two users
+app.get('/api/messages', (req, res) => {
+    const { user1, user2 } = req.query;
+    if (!user1 || !user2) return res.status(400).json({ success: false, message: 'İstifadəçilər tələb olunur.' });
+
+    const u1 = user1.trim().toLowerCase();
+    const u2 = user2.trim().toLowerCase();
+
+    const conversation = storage.data.messages.filter(m =>
+        (m.sender.toLowerCase() === u1 && m.receiver.toLowerCase() === u2) ||
+        (m.sender.toLowerCase() === u2 && m.receiver.toLowerCase() === u1)
+    ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    res.json(conversation);
+});
+
+// API: Send private message
+app.post('/api/messages', (req, res) => {
+    const { sender, receiver, text } = req.body;
+    if (!sender || !receiver || !text || !text.trim()) {
+        return res.status(400).json({ success: false, message: 'Göndərən, alan və mətn tələb olunur.' });
+    }
+
+    const newMessage = {
+        id: Date.now().toString(),
+        sender: sender.trim(),
+        receiver: receiver.trim(),
+        text: text.trim(),
+        timestamp: new Date().toISOString()
+    };
+
+    storage.data.messages.push(newMessage);
+    storage.saveMessages();
+
+    res.json({ success: true, message: 'Mesaj göndərildi.', messageObj: newMessage });
+});
+
 // API: Admin data overview
 app.get('/api/admin/data', (req, res) => {
     res.json({
         receipts: storage.data.receipts,
         users: storage.data.users,
         campaigns: storage.data.campaigns,
-        comments: storage.data.comments
+        comments: storage.data.comments,
+        messages: storage.data.messages
     });
 });
 
