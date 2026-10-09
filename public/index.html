@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çek Fondu - EDV ilə Dəstək Ol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans pb-10">
+    <div class="max-w-xl mx-auto min-h-screen bg-white shadow-xl flex flex-col justify-between rounded-2xl my-0 sm:my-6 overflow-hidden">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-6 text-center shadow-lg">
+            <h1 class="text-3xl font-extrabold tracking-tight">Çek İanə Fondu</h1>
+            <p class="text-sm text-emerald-100 mt-1">EDV çeklərinizi bağışlayın, xeyriyyəyə dəstək olun!</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="p-5 flex-1 space-y-6">
+            <!-- User Login / Profile Section -->
+            <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 shadow-sm">
+                <div id="loginSection">
+                    <label class="block text-sm font-semibold mb-1 text-emerald-900">İştirakçı Adı:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="usernameInput" placeholder="Məsələn: elnur123" class="flex-1 p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                        <button onclick="loginUser()" class="bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow">Daxil ol</button>
+                    </div>
+                </div>
+                <div id="profileSection" class="hidden flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-emerald-700 font-medium">Xoş gəldiniz,</p>
+                        <p class="text-lg font-bold text-emerald-900" id="displayUsername"></p>
+                        <p class="text-xs text-emerald-700 mt-0.5">Xallarınız: <span id="userPoints" class="font-bold">0</span> | Göndərilən Çeklər: <span id="userDonations" class="font-bold">0</span></p>
+                    </div>
+                    <button onclick="logout()" class="text-xs bg-white text-red-600 px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 font-semibold">Çıxış</button>
+                </div>
+            </div>
+
+            <!-- Campaign Selector & Scanner Section -->
+            <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span>🎯</span> Kampaniya Seçin və Çek Göndərin
+                </h2>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Dəstəkləmək istədiyiniz məqsəd:</label>
+                    <select id="campaignSelect" class="w-full p-3 border border-slate-300 rounded-xl bg-white font-medium focus:ring-2 focus:ring-emerald-500">
+                        <!-- Options populated dynamically -->
+                    </select>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="startScanner()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow text-base">
+                        <span>📷</span> Çekin QR Kodunu Skan Et
+                    </button>
+                </div>
+
+                <!-- Manual Code Input -->
+                <div class="pt-2 border-t border-slate-200 flex gap-2">
+                    <input type="text" id="manualCode" placeholder="və ya Çek F/K kodunu daxil edin..." class="flex-1 p-2.5 text-sm border border-slate-300 rounded-xl bg-white">
+                    <button onclick="submitManualCode()" class="bg-slate-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-800">Çek Göndər</button>
+                </div>
+
+                <!-- QR Scanner Container -->
+                <div id="readerContainer" class="hidden relative bg-black rounded-xl overflow-hidden mt-3">
+                    <div id="reader" class="w-full"></div>
+                    <button onclick="stopScanner()" class="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold z-10">Bağla</button>
+                </div>
+            </div>
+
+            <!-- Campaigns List -->
+            <div>
+                <h2 class="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <span>📊</span> Aktiv Kampaniyalar və İlerleme
+                </h2>
+                <div id="campaignsList" class="space-y-4">
+                    <!-- Dynamic campaigns -->
+                </div>
+            </div>
+
+            <!-- Leaderboard & Recent Activity Tabs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <!-- Top Donors -->
+                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-sm">
+                    <h3 class="font-bold text-amber-900 mb-3 flex items-center gap-2 text-sm">
+                        <span>🏆</span> Ən Aktiv Çek Bağışlayanlar
+                    </h3>
+                    <div id="leaderboardList" class="space-y-2 text-xs">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-teal-50 p-4 rounded-2xl border border-teal-200 shadow-sm">
+                    <h3 class="font-bold text-teal-900 mb-3 flex items-center gap-2 text-sm">
+                        <span>⚡</span> Son Göndərilən Çeklər
+                    </h3>
+                    <div id="recentList" class="space-y-2 text-xs">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-100 p-4 text-center text-xs text-slate-500 border-t mt-4">
+            &copy; 2026 Çek İanə və EDV Platforması. Bütün hüquqlar qorunur.
+        </footer>
+    </div>
+
+    <script>
+        let currentUser = localStorage.getItem('username') || '';
+        let html5QrCode = null;
+        let API_BASE = "";
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadConfig();
+            if (currentUser) {
+                document.getElementById('usernameInput').value = currentUser;
+                showProfile();
+                fetchUserStats();
+            }
+            fetchCampaigns();
+            fetchLeaderboard();
+            fetchRecent();
+        });
+
+        async function loadConfig() {
+            try {
+                const res = await fetch('/config.json');
+                const config = await res.json();
+                if (config && config.apiUrl) {
+                    API_BASE = config.apiUrl;
+                }
+            } catch (e) {
+                API_BASE = "";
+            }
+        }
+
+        function loginUser() {
+            const val = document.getElementById('usernameInput').value.trim();
+            if (!val) return alert('Zəhmət olmasa iştirakçı adı daxil edin');
+            currentUser = val;
+            localStorage.setItem('username', currentUser);
+            showProfile();
+            fetchUserStats();
+            fetchLeaderboard();
+            fetchRecent();
+        }
+
+        function logout() {
+            localStorage.removeItem('username');
+            currentUser = '';
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('profileSection').classList.add('hidden');
+        }
+
+        function showProfile() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('profileSection').classList.remove('hidden');
+            document.getElementById('displayUsername').innerText = currentUser;
+        }
+
+        async function fetchCampaigns() {
+            try {
+                const res = await fetch(API_BASE + '/api/campaigns');
+                const campaigns = await res.json();
+                const listEl = document.getElementById('campaignsList');
+                const selectEl = document.getElementById('campaignSelect');
+                listEl.innerHTML = '';
+                selectEl.innerHTML = '';
+
+                campaigns.forEach(c => {
+                    const percent = Math.min(Math.round((c.current / c.target) * 100), 100);
+                    listEl.innerHTML += `
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                            <h3 class="font-bold text-slate-800 text-sm">${c.title}</h3>
+                            <p class="text-xs text-slate-600">${c.description}</p>
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1 text-slate-700">
+                                    <span>Yığılıb: ${c.current} AZN</span>
+                                    <span>Hədəf: ${c.target} AZN (${percent}%)</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border">
+                                    <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    selectEl.innerHTML += `<option value="${c.id}">${c.title}</option>`;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function fetchUserStats() {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(API_BASE + `/api/user/${currentUser}`);
+                const data = await res.json();
+                document.getElementById('userPoints').innerText = data.points || 0;
+                document.getElementById('userDonations').innerText = data.donationsCount || 0;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function fetchLeaderboard() {
+            try {
+                const res = await fetch(API_BASE + '/api/leaderboard');
+                const users = await res.json();
+                const listEl = document.getElementById('leaderboardList');
+                listEl.innerHTML = '';
+                if (users.length === 0) {
+                    listEl.innerHTML = '<p class="text-amber-700 italic">Hələ iştirakçı yoxdur.</p>';
+                    return;
+                }
+                users.forEach((u, index) => {
+                    listEl.innerHTML += `
+                        <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-amber-100 shadow-xs">
+                            <span class="font-bold text-amber-900">${index + 1}. ${u.username}</span>
+                            <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-md font-bold">${u.points} xal</span>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function fetchRecent() {
+            try {
+                const res = await fetch(API_BASE + '/api/recent');
+                const recent = await res.json();
+                const listEl = document.getElementById('recentList');
+                listEl.innerHTML = '';
+                if (recent.length === 0) {
+                    listEl.innerHTML = '<p class="text-teal-700 italic">Hələ çek göndərilməyib.</p>';
+                    return;
+                }
+                recent.forEach(r => {
+                    const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    listEl.innerHTML += `
+                        <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-teal-100 shadow-xs">
+                            <span class="font-medium text-teal-900">${r.username} (Çek qeydə alındı)</span>
+                            <span class="text-slate-400">${timeStr}</span>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function submitManualCode() {
+            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
+            const code = document.getElementById('manualCode').value.trim();
+            if (!code) return alert('Zəhmət olmasa çek kodunu daxil edin');
+            const campaignId = document.getElementById('campaignSelect').value;
+
+            try {
+                const res = await fetch(API_BASE + '/api/donate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, campaignId, amount: 1.0, qrData: code })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    document.getElementById('manualCode').value = '';
+                    fetchCampaigns();
+                    fetchUserStats();
+                    fetchLeaderboard();
+                    fetchRecent();
+                }
+            } catch (e) {
+                alert('Xəta baş verdi');
+            }
+        }
+
+        async function startScanner() {
+            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
+            const container = document.getElementById('readerContainer');
+            container.classList.remove('hidden');
+
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                async (decodedText) => {
+                    stopScanner();
+                    const campaignId = document.getElementById('campaignSelect').value;
+                    const res = await fetch(API_BASE + '/api/donate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: currentUser, campaignId, amount: 1.0, qrData: decodedText })
+                    });
+                    const data = await res.json();
+                    alert(data.message);
+                    fetchCampaigns();
+                    fetchUserStats();
+                    fetchLeaderboard();
+                    fetchRecent();
+                },
+                (errorMessage) => {
+                    // Scanning ongoing
+                }
+            ).catch(err => {
+                alert('Kamera açılmadı və ya icazə verilmədi: ' + err);
+                container.classList.add('hidden');
+            });
+        }
+
+        function stopScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('readerContainer').classList.add('hidden');
+                }).catch(err => {
+                    document.getElementById('readerContainer').classList.add('hidden');
+                });
+            } else {
+                document.getElementById('readerContainer').classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "1",
+    "title": "Hərkəsdən 1 AZN: Təcili Əməliyyat Dəstəyi",
+    "description": "Balaca Muradın əməliyyatı üçün 1 AZN ilə dəstək olaq.",
+    "target": 1000,
+    "current": 450
+  },
+  {
+    "id": "2",
+    "title": "Küçə Heyvanlarına 1 Qab Yem",
+    "description": "Soyuq qış günlərində sahibsiz heyvanlar aç qalmasın.",
+    "target": 500,
+    "current": 320
+  }
+]
