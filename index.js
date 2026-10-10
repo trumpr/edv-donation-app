@@ -310,6 +310,55 @@ app.post('/api/messages/block', (req, res) => {
     res.json({ success: true, isBlocked, message: isBlocked ? 'İstifadəçi bloklandı.' : 'İstifadəçi blokdan çıxarıldı.' });
 });
 
+// API: Send Green Heart Gift between users
+app.post('/api/messages/send-heart', (req, res) => {
+    const { sender, receiver } = req.body;
+    if (!sender || !receiver) {
+        return res.status(400).json({ success: false, message: 'Göndərən və alan tələb olunur.' });
+    }
+
+    const s = sender.trim();
+    const r = receiver.trim();
+    const senderObj = storage.data.users[s];
+    const receiverObj = storage.data.users[r];
+
+    if (!senderObj || !receiverObj) {
+        return res.status(400).json({ success: false, message: 'İştirakçı tapılmadı.' });
+    }
+
+    if ((senderObj.hearts || 0) <= 0) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ürək göndərmək üçün balansınızda Ürək 💚 yoxdur! Yeni ƏDV çeki yükləyərək ürək qazanın.'
+        });
+    }
+
+    // Deduct 1 heart from sender, add 1 to receiver
+    senderObj.hearts -= 1;
+    receiverObj.hearts = (receiverObj.hearts || 0) + 1;
+    storage.saveUsers();
+
+    const giftMessage = {
+        id: Date.now().toString(),
+        sender: s,
+        receiver: r,
+        text: `🎁 ${s} sizə 1 Ürək 💚 hədiyyə göndərdi!`,
+        isHeartGift: true,
+        read: false,
+        timestamp: new Date().toISOString()
+    };
+
+    storage.data.messages.push(giftMessage);
+    storage.saveMessages();
+
+    res.json({
+        success: true,
+        message: `Uğurla ${r} iştirakçısına 1 Ürək 💚 göndərdiniz!`,
+        messageObj: giftMessage,
+        user: senderObj
+    });
+});
+
 // API: Send private message (spends 1 Heart 💚, checks blocking status)
 app.post('/api/messages', (req, res) => {
     const { sender, receiver, text } = req.body;
@@ -452,7 +501,7 @@ app.post('/api/posts/:id/comment', (req, res) => {
     if ((userObj.hearts || 0) <= 0) {
         return res.status(400).json({
             success: false,
-            message: 'Rəy yazmaq üçün balansınızda Ürək 💚 yoxdur! İstədiyiniz uzunluqda rəy yaza bilmək üçün yeni ƏDV çeki yükləyərək 1 Ürək qazanın 💚'
+            message: 'Rəy yazmaq üçün balansınızda Ürək 💚 yoxdur! İstədiyiniz uzunluqda rəy yazabilmək üçün yeni ƏDV çeki yükləyərək 1 Ürək qazanın 💚'
         });
     }
 

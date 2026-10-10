@@ -299,6 +299,9 @@
                     </div>
                     <!-- WhatsApp Input Footer -->
                     <div class="p-3 bg-[#f0f2f5] border-t flex items-center gap-2">
+                        <button onclick="sendHeartGift()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 p-2.5 rounded-full shadow flex items-center justify-center shrink-0 transition" title="1 Ürək 💚 hədiyyə göndər">
+                            💚
+                        </button>
                         <input type="text" id="chatMessageInput" placeholder="Mesaj yazın..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); sendPrivateMessage(); }" class="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#00a884]">
                         <button onclick="sendPrivateMessage()" class="bg-[#00a884] hover:bg-[#008f72] text-white p-2.5 rounded-full shadow flex items-center justify-center shrink-0 transition">
                             <svg class="w-4 h-4 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1145,6 +1148,29 @@
             }
         }
 
+        async function sendHeartGift() {
+            if (!currentUser || !activeChatUser) return;
+            if (!confirm(`"${activeChatUser}" adlı iştirakçıya 1 Ürək 💚 hədiyyə göndərmək istəyirsiniz?`)) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/messages/send-heart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sender: currentUser, receiver: activeChatUser })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    fetchMessages();
+                    fetchUserStats();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('Ürək göndərilərkən xəta baş verdi.');
+            }
+        }
+
         async function fetchMessages() {
             if (!activeChatUser || !currentUser) return;
             try {
@@ -1160,8 +1186,19 @@
 
                 messages.forEach(m => {
                     const isMe = m.sender.toLowerCase() === currentUser.toLowerCase();
-                    const bubbleAlign = isMe ? 'ml-auto bg-[#005c4b] text-white rounded-2xl rounded-tr-xs' : 'mr-auto bg-white text-slate-900 border border-slate-200 rounded-2xl rounded-tl-xs';
                     const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    if (m.isHeartGift) {
+                        listEl.innerHTML += `
+                            <div class="mx-auto my-2 bg-emerald-100 border border-emerald-300 text-emerald-900 rounded-xl p-2.5 text-xs text-center shadow-xs max-w-[90%] font-bold space-y-0.5">
+                                <p>💚 ${escapeHtml(m.text)}</p>
+                                <span class="text-[9px] text-emerald-700 block">${timeStr}</span>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    const bubbleAlign = isMe ? 'ml-auto bg-[#005c4b] text-white rounded-2xl rounded-tr-xs' : 'mr-auto bg-white text-slate-900 border border-slate-200 rounded-2xl rounded-tl-xs';
                     const senderLabel = !isMe ? `<div class="font-extrabold text-[11px] text-[#00a884] mb-1">${escapeHtml(m.sender)}</div>` : '';
 
                     let ticks = '';
