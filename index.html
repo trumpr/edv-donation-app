@@ -84,7 +84,7 @@
             <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col h-[85vh] overflow-hidden p-5 space-y-4">
                 <div class="flex justify-between items-center border-b pb-3">
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <span>🏆</span> Tam Reytinq Cədvəli (Top 10 və Mənim Yerim)
+                        <span>🏆</span> Tam Reytinq Cədvəli və Mənim Yerim
                     </h2>
                     <button onclick="closeLeaderboardModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
                 </div>
@@ -272,7 +272,7 @@
 
             <!-- Leaderboard & Recent Activity Tabs -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <!-- Top Donors (Top 10) -->
+                <!-- Top Donors (Top 10 Avatars Horizontal Row) -->
                 <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-sm space-y-3">
                     <div class="flex justify-between items-center">
                         <h3 class="font-bold text-amber-900 flex items-center gap-2 text-sm">
@@ -280,7 +280,7 @@
                         </h3>
                     </div>
                     <div id="leaderboardList" class="space-y-2 text-xs">
-                        <!-- Loaded dynamically -->
+                        <!-- Loaded dynamically as horizontal scrollable avatars -->
                     </div>
                     <button onclick="openLeaderboardModal()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-xl text-xs font-bold transition shadow">
                         📊 Bütün Reytinqə və Mənim Yerimə Bax
@@ -351,7 +351,7 @@
             if (currentUser) {
                 statusEl.innerHTML = `Daxil olub: <b>${currentUser}</b>`;
             } else {
-                statusEl.innerHTML = `Daxil olunmayıb`;
+                statusEl.innerHTML = `Daxil olunmayıب`;
             }
         }
 
@@ -403,7 +403,6 @@
                 return;
             }
 
-            // Find current user rank
             let myRank = -1;
             if (currentUser) {
                 myRank = users.findIndex(u => u.username.toLowerCase() === currentUser.toLowerCase());
@@ -1102,34 +1101,36 @@
                 const listEl = document.getElementById('leaderboardList');
                 listEl.innerHTML = '';
                 if (users.length === 0) {
-                    listEl.innerHTML = '<p class="text-amber-700 italic">Hələ iştirakçı yoxdur.</p>';
+                    listEl.innerHTML = '<p class="text-amber-700 italic text-xs">Hələ iştirakçı yoxdur.</p>';
                     return;
                 }
-                // Show Top 10 in main screen leaderboard card
+
                 const top10 = users.slice(0, 10);
+                let avatarsRowHtml = `<div class="flex gap-3 overflow-x-auto pb-2 pt-1">`;
                 top10.forEach((u, index) => {
                     let badge = `#${index + 1}`;
                     if (index === 0) badge = '🥇';
                     else if (index === 1) badge = '🥈';
                     else if (index === 2) badge = '🥉';
 
-                    let avatarHtml = `<div class="w-6 h-6 rounded-full bg-amber-200 text-amber-900 font-bold flex items-center justify-center text-[10px] shrink-0">${u.username.charAt(0).toUpperCase()}</div>`;
+                    let avatarHtml = `<div class="w-12 h-12 rounded-full bg-amber-200 text-amber-900 font-bold flex items-center justify-center text-sm shadow-inner">${u.username.charAt(0).toUpperCase()}</div>`;
                     if (u.avatarBase64) {
-                        avatarHtml = `<img src="${u.avatarBase64}" class="w-6 h-6 rounded-full object-cover shrink-0">`;
+                        avatarHtml = `<img src="${u.avatarBase64}" class="w-12 h-12 rounded-full object-cover shadow">`;
                     }
-                    const isMe = currentUser && u.username.toLowerCase() === currentUser.toLowerCase();
 
-                    listEl.innerHTML += `
-                        <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-amber-100 shadow-xs">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-amber-900 w-5 text-center">${badge}</span>
+                    avatarsRowHtml += `
+                        <div class="flex flex-col items-center shrink-0 cursor-pointer" onclick="openLeaderboardModal()" title="${u.username} (${u.points} xal)">
+                            <div class="relative">
                                 ${avatarHtml}
-                                <span class="font-bold text-slate-800">${u.username}${isMe ? ' (Siz)' : ''}</span>
+                                <span class="absolute -bottom-1 -right-1 bg-amber-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow">${badge}</span>
                             </div>
-                            <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-md font-bold">${u.points} xal</span>
+                            <span class="text-[10px] font-bold text-slate-800 mt-1 truncate max-w-[55px]">${u.username}</span>
+                            <span class="text-[9px] text-amber-700">${u.points}xal</span>
                         </div>
                     `;
                 });
+                avatarsRowHtml += `</div>`;
+                listEl.innerHTML = avatarsRowHtml;
             } catch (e) {
                 console.error(e);
             }
