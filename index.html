@@ -259,35 +259,45 @@
             </div>
         </div>
 
-        <!-- Chat Modal -->
+        <!-- WhatsApp-style Chat Modal -->
         <div id="chatModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col h-[80vh] overflow-hidden">
-                <!-- Chat Header -->
-                <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <button id="chatBackBtn" onclick="showChatUserSelect()" class="hidden text-slate-300 hover:text-white mr-1 text-xs font-bold">← Geri</button>
-                        <span class="text-lg">💬</span>
-                        <span id="chatTitleUsername" class="font-bold text-sm">Şəxsi Çat</span>
+            <div class="bg-[#efeae2] rounded-2xl max-w-md w-full shadow-2xl flex flex-col h-[85vh] overflow-hidden border border-slate-300">
+                <!-- WhatsApp Header -->
+                <div class="bg-[#00a884] text-white p-3 px-4 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-3">
+                        <button id="chatBackBtn" onclick="showChatUserSelect()" class="hidden text-white hover:opacity-80 text-lg font-bold pr-1">←</button>
+                        <div id="chatHeaderAvatar" class="w-10 h-10 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center text-sm shadow shrink-0 overflow-hidden">
+                            💬
+                        </div>
+                        <div>
+                            <span id="chatTitleUsername" class="font-bold text-sm block">Şəxsi Çat</span>
+                            <span class="text-[10px] text-emerald-100 block">online</span>
+                        </div>
                     </div>
-                    <button onclick="closeChatModal()" class="text-slate-400 hover:text-white font-bold text-sm">✕ Bağla</button>
+                    <button onclick="closeChatModal()" class="text-white hover:opacity-80 font-bold text-lg">✕</button>
                 </div>
 
                 <!-- User selection view -->
-                <div id="chatSelectUserView" class="p-4 flex-1 overflow-y-auto space-y-3">
-                    <p class="text-xs font-semibold text-slate-600">Kimə mesaj yazmaq istəyirsiniz?</p>
+                <div id="chatSelectUserView" class="p-4 flex-1 overflow-y-auto space-y-3 bg-white">
+                    <p class="text-xs font-bold text-slate-600 mb-2">Söhbət etmək üçün iştirakçı seçin:</p>
                     <div id="chatUserList" class="space-y-2">
                         <!-- Loaded dynamically -->
                     </div>
                 </div>
 
-                <!-- Active Chat View -->
-                <div id="activeChatView" class="hidden flex-1 flex flex-col justify-between bg-slate-50 overflow-hidden">
+                <!-- Active Chat View (WhatsApp Style) -->
+                <div id="activeChatView" class="hidden flex-1 flex flex-col justify-between overflow-hidden bg-[radial-gradient(#e5ddd5_1px,transparent_1px)] [background-size:16px_16px]">
                     <div id="chatMessagesList" class="p-4 flex-1 overflow-y-auto space-y-3">
                         <!-- Messages loaded dynamically -->
                     </div>
-                    <div class="p-3 bg-white border-t flex gap-2">
-                        <input type="text" id="chatMessageInput" placeholder="Mesaj yazın..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); sendPrivateMessage(); }" class="flex-1 p-2.5 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500">
-                        <button onclick="sendPrivateMessage()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-700">Göndər</button>
+                    <!-- WhatsApp Input Footer -->
+                    <div class="p-3 bg-[#f0f2f5] border-t flex items-center gap-2">
+                        <input type="text" id="chatMessageInput" placeholder="Mesaj yazın..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); sendPrivateMessage(); }" class="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#00a884]">
+                        <button onclick="sendPrivateMessage()" class="bg-[#00a884] hover:bg-[#008f72] text-white p-2.5 rounded-full shadow flex items-center justify-center shrink-0 transition">
+                            <svg class="w-4 h-4 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -823,7 +833,7 @@
         async function toggleLike(postId) {
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             try {
-                const res = await fetch(API_BASE + `/api/posts/${postId}/like`, {
+                const res = await fetch(API_BASE + '/api/posts/${postId}/like', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: currentUser })
@@ -990,7 +1000,9 @@
             document.getElementById('chatSelectUserView').classList.remove('hidden');
             document.getElementById('activeChatView').classList.add('hidden');
             document.getElementById('chatBackBtn').classList.add('hidden');
-            document.getElementById('chatTitleUsername').innerText = "Şəxsi Çat - İştirakçılar";
+            document.getElementById('chatTitleUsername').innerText = "Şəxsi Çat";
+            const avatarHeader = document.getElementById('chatHeaderAvatar');
+            if (avatarHeader) avatarHeader.innerText = "💬";
             activeChatUser = null;
         }
 
@@ -999,7 +1011,17 @@
             document.getElementById('chatSelectUserView').classList.add('hidden');
             document.getElementById('activeChatView').classList.remove('hidden');
             document.getElementById('chatBackBtn').classList.remove('hidden');
-            document.getElementById('chatTitleUsername').innerText = `💬 ${username} ilə söhbət`;
+            document.getElementById('chatTitleUsername').innerText = username;
+
+            const avatarHeader = document.getElementById('chatHeaderAvatar');
+            if (avatarHeader) {
+                const foundUser = allParticipants.find(p => p.username.toLowerCase() === username.toLowerCase());
+                if (foundUser && foundUser.avatarBase64) {
+                    avatarHeader.innerHTML = `<img src="${foundUser.avatarBase64}" class="w-full h-full object-cover">`;
+                } else {
+                    avatarHeader.innerText = username.charAt(0).toUpperCase();
+                }
+            }
 
             markMessagesAsRead(username);
             fetchMessages();
@@ -1036,16 +1058,16 @@
 
                 messages.forEach(m => {
                     const isMe = m.sender.toLowerCase() === currentUser.toLowerCase();
-                    const bubbleAlign = isMe ? 'ml-auto bg-emerald-600 text-white rounded-2xl rounded-tr-xs' : 'mr-auto bg-white text-slate-800 border border-emerald-200 rounded-2xl rounded-tl-xs';
+                    const bubbleAlign = isMe ? 'ml-auto bg-[#005c4b] text-white rounded-2xl rounded-tr-xs' : 'mr-auto bg-white text-slate-900 border border-slate-200 rounded-2xl rounded-tl-xs';
                     const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const senderLabel = !isMe ? `<div class="flex items-center gap-1.5 font-extrabold text-xs text-emerald-900 mb-1 border-b border-emerald-100 pb-1"><span>👤 Kimdən:</span><span>${escapeHtml(m.sender)}</span></div>` : '';
-                    const blueTicks = isMe ? `<span class="text-blue-300 font-extrabold ml-1 tracking-tighter" title="Oxundu">✓✓</span>` : '';
+                    const senderLabel = !isMe ? `<div class="font-extrabold text-[11px] text-[#00a884] mb-1">${escapeHtml(m.sender)}</div>` : '';
+                    const blueTicks = isMe ? `<span class="text-sky-400 font-extrabold ml-1 tracking-tighter" title="Oxundu">✓✓</span>` : '';
 
                     listEl.innerHTML += `
                         <div class="max-w-[85%] ${bubbleAlign} p-3 text-xs space-y-1 shadow-sm">
                             ${senderLabel}
-                            <p class="whitespace-pre-line leading-relaxed text-slate-900">${escapeHtml(m.text)}</p>
-                            <div class="flex items-center justify-end gap-1 pt-1 border-t border-slate-100/50">
+                            <p class="whitespace-pre-line leading-relaxed">${escapeHtml(m.text)}</p>
+                            <div class="flex items-center justify-end gap-1 pt-0.5">
                                 <span class="text-[9px] ${isMe ? 'text-emerald-200' : 'text-slate-400'}">${timeStr}</span>
                                 ${blueTicks}
                             </div>
@@ -1262,7 +1284,7 @@
                 const res = await fetch(API_BASE + '/api/recent');
                 const recent = await res.json();
                 const listEl = document.getElementById('recentList');
-                listEl.innerHTML = '';
+                listEl.innerHTML = ``;
                 if (recent.length === 0) {
                     listEl.innerHTML = '<p class="text-teal-700 italic">Hələ çek şəkli göndərilməyib.</p>';
                     return;

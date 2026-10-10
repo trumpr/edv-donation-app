@@ -4,35 +4,40 @@
     "sender": "eldar",
     "receiver": "Mehdi",
     "text": "sasasas",
-    "timestamp": "2026-10-09T19:39:14.874Z"
+    "timestamp": "2026-10-09T19:39:14.874Z",
+    "read": true
   },
   {
     "id": "1791575002534",
     "sender": "eldar",
     "receiver": "Mehdi",
     "text": "sasasa",
-    "timestamp": "2026-10-09T19:43:22.534Z"
+    "timestamp": "2026-10-09T19:43:22.534Z",
+    "read": true
   },
   {
     "id": "1791575038012",
     "sender": "eldar",
     "receiver": "Mehdi",
     "text": "asdasdasd",
-    "timestamp": "2026-10-09T19:43:58.012Z"
+    "timestamp": "2026-10-09T19:43:58.012Z",
+    "read": true
   },
   {
     "id": "1791575223170",
     "sender": "eldar",
     "receiver": "Mehdi",
     "text": "werwerewr",
-    "timestamp": "2026-10-09T19:47:03.170Z"
+    "timestamp": "2026-10-09T19:47:03.170Z",
+    "read": true
   },
   {
     "id": "1791575650193",
     "sender": "eldar",
     "receiver": "Mehdi",
     "text": "sasaafwerer",
-    "timestamp": "2026-10-09T19:54:10.193Z"
+    "timestamp": "2026-10-09T19:54:10.193Z",
+    "read": true
   },
   {
     "id": "1791575685745",
@@ -112,5 +117,13 @@
     "text": "Yaxsi",
     "timestamp": "2026-10-10T09:55:18.638Z",
     "read": true
+  },
+  {
+    "id": "1791631710662",
+    "sender": "Mehdi",
+    "receiver": "aygun",
+    "text": "Sagol sen necesen?",
+    "read": true,
+    "timestamp": "2026-10-10T11:28:30.673Z"
   }
 ]
