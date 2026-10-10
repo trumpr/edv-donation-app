@@ -258,6 +258,28 @@ app.post('/api/messages/mark-read', (req, res) => {
     res.json({ success: true });
 });
 
+// API: Delete private chat between two users
+app.post('/api/messages/delete-chat', (req, res) => {
+    const { user1, user2 } = req.body;
+    if (!user1 || !user2) return res.status(400).json({ success: false, message: 'İştirakçılar tələb olunur.' });
+
+    const u1 = user1.trim().toLowerCase();
+    const u2 = user2.trim().toLowerCase();
+
+    const initialLength = storage.data.messages.length;
+    storage.data.messages = storage.data.messages.filter(m => {
+        const sender = m.sender.toLowerCase();
+        const receiver = m.receiver.toLowerCase();
+        return !((sender === u1 && receiver === u2) || (sender === u2 && receiver === u1));
+    });
+
+    if (storage.data.messages.length !== initialLength) {
+        storage.saveMessages();
+    }
+
+    res.json({ success: true, message: 'Söhbət silindi.' });
+});
+
 // API: Send private message (spends 1 Heart 💚, allows full length message text with paragraphs/sentences)
 app.post('/api/messages', (req, res) => {
     const { sender, receiver, text } = req.body;

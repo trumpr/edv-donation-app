@@ -274,7 +274,10 @@
                             <span class="text-[10px] text-emerald-100 block">online</span>
                         </div>
                     </div>
-                    <button onclick="closeChatModal()" class="text-white hover:opacity-80 font-bold text-lg">✕</button>
+                    <div class="flex items-center gap-3">
+                        <button id="deleteChatBtn" onclick="deleteActiveChat()" class="hidden text-white hover:opacity-80 text-base font-bold" title="Söhbəti təmizlə">🗑️</button>
+                        <button onclick="closeChatModal()" class="text-white hover:opacity-80 font-bold text-lg">✕</button>
+                    </div>
                 </div>
 
                 <!-- User selection view -->
@@ -1000,6 +1003,7 @@
             document.getElementById('chatSelectUserView').classList.remove('hidden');
             document.getElementById('activeChatView').classList.add('hidden');
             document.getElementById('chatBackBtn').classList.add('hidden');
+            document.getElementById('deleteChatBtn').classList.add('hidden');
             document.getElementById('chatTitleUsername').innerText = "Şəxsi Çat";
             const avatarHeader = document.getElementById('chatHeaderAvatar');
             if (avatarHeader) avatarHeader.innerText = "💬";
@@ -1011,6 +1015,7 @@
             document.getElementById('chatSelectUserView').classList.add('hidden');
             document.getElementById('activeChatView').classList.remove('hidden');
             document.getElementById('chatBackBtn').classList.remove('hidden');
+            document.getElementById('deleteChatBtn').classList.remove('hidden');
             document.getElementById('chatTitleUsername').innerText = username;
 
             const avatarHeader = document.getElementById('chatHeaderAvatar');
@@ -1040,6 +1045,29 @@
                 checkUnreadMessages();
             } catch (e) {
                 console.error(e);
+            }
+        }
+
+        async function deleteActiveChat() {
+            if (!currentUser || !activeChatUser) return;
+            if (!confirm(`"${activeChatUser}" ilə olan bütün yazışmaları təmizləmək istədiyinizə əminsiniz?`)) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/messages/delete-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user1: currentUser, user2: activeChatUser })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Söhbət təmizləndi.');
+                    showChatUserSelect();
+                    fetchChatUsers();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('Söhbət silinərkən xəta baş verdi.');
             }
         }
 
