@@ -8,26 +8,23 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans pb-10">
     <div class="max-w-xl mx-auto min-h-screen bg-white shadow-xl flex flex-col justify-between rounded-2xl my-0 sm:my-6 overflow-hidden relative">
-        <!-- Explanatory Banner Image at the Absolute Top -->
-        <div class="bg-slate-900 border-b overflow-hidden shadow-sm">
-            <img src="./banner.png" alt="Bir kliklə yaxşılıq et!" class="w-full h-auto object-cover max-h-80">
-        </div>
-
-        <!-- Header with ƏDV haqqında button and Hamburger menu -->
-        <header class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4 text-center shadow-lg relative flex items-center justify-between">
-            <button onclick="openManifestoModal()" class="bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5 shrink-0">
+        <!-- Top Bar with ƏDV haqqında and Hamburger Menu at the Absolute Top (Above Banner) -->
+        <div class="bg-gradient-to-r from-emerald-700 to-teal-800 text-white p-3 px-4 flex items-center justify-between shadow-md">
+            <button onclick="openManifestoModal()" class="bg-emerald-900 hover:bg-emerald-950 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow flex items-center gap-1.5 shrink-0">
                 <span>ℹ️</span> ƏDV haqqında
             </button>
-            <div>
-                <p class="text-xs text-emerald-100 font-semibold px-1">EDV çekini yüklə, dəstək ol!</p>
-            </div>
-            <!-- Hamburger Menu Button -->
-            <button onclick="toggleHamburgerMenu()" class="text-white p-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 transition flex items-center justify-center shadow-md shrink-0">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span class="text-xs font-extrabold text-emerald-100 tracking-wide">Çek İanə Platforması</span>
+            <button onclick="toggleHamburgerMenu()" class="bg-emerald-900 hover:bg-emerald-950 text-white p-2.5 rounded-xl transition flex items-center justify-center shadow shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
-        </header>
+        </div>
+
+        <!-- Explanatory Banner Image -->
+        <div class="bg-slate-900 border-b overflow-hidden shadow-sm">
+            <img src="./banner.png" alt="Bir kliklə yaxşılıq et!" class="w-full h-auto object-cover max-h-80">
+        </div>
 
         <!-- Hamburger Slide-over Menu -->
         <div id="hamburgerMenuModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-end" onclick="toggleHamburgerMenu()">
@@ -404,6 +401,10 @@
         });
 
         async function loadConfig() {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                API_BASE = 'http://localhost:3000';
+                return;
+            }
             try {
                 const res = await fetch('./config.json');
                 const config = await res.json();
@@ -411,7 +412,7 @@
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                console.error("Config oxunmadı, fallback istifadə olunur:", API_BASE);
+                console.error("Config oxunmadı:", e);
             }
         }
 
