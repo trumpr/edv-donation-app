@@ -64,7 +64,7 @@ app.post('/api/login', (req, res) => {
     res.json({ success: true, message: 'Uğurla daxil oldunuz!', user: storage.data.users[u] });
 });
 
-// API: Submit receipt photo (1 receipt = 1 Heart 💚 earned)
+// API: Submit receipt photo (Pending admin approval)
 app.post('/api/donate', (req, res) => {
     const { username, campaignId, qrData, imageBase64 } = req.body;
 
@@ -79,33 +79,17 @@ app.post('/api/donate', (req, res) => {
         campaignId: campaignId || '1',
         qrData: qrData || 'Çek Şəkli',
         imageBase64: imageBase64 || null,
+        status: 'pending', // pending admin validation
         timestamp: new Date().toISOString()
     };
 
     storage.data.receipts.push(receiptEntry);
     storage.saveReceipts();
 
-    // Update campaign progress (1 receipt)
-    const campaign = storage.data.campaigns.find(c => c.id === campaignId);
-    if (campaign) {
-        campaign.current += 1;
-        storage.saveCampaigns();
-    }
-
-    // Update user stats
-    if (!storage.data.users[u]) {
-        storage.data.users[u] = { pin: '0000', donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '', blockedUsers: [] };
-    }
-    storage.data.users[u].donationsCount += 1;
-    storage.data.users[u].points += 10; // 10 points per receipt photo
-    storage.data.users[u].hearts = (storage.data.users[u].hearts || 0) + 1; // Earns 1 Heart!
-    storage.saveUsers();
-
     res.json({
         success: true,
-        message: 'Təşəkkürlər! Çek şəkliniz qeydə alındı və balansınıza 1 Ürək 💚 əlavə olundu!',
-        user: storage.data.users[u],
-        campaign
+        message: 'Çek şəkliniz admin təsdiqinə göndərildi. Admin tərəfindən yoxlanıldıqdan sonra xal və ürək balansınıza əlavə olunacaq!',
+        receipt: receiptEntry
     });
 });
 
@@ -155,9 +139,10 @@ app.get('/api/user/:username', (req, res) => {
     res.json(user);
 });
 
-// API: Get recent donations
+// API: Get recent donations (approved only)
 app.get('/api/recent', (req, res) => {
-    const recent = storage.data.receipts.slice(-10).reverse();
+    const approved = storage.data.receipts.filter(r => r.status === 'approved' || !r.status);
+    const recent = approved.slice(-10).reverse();
     res.json(recent);
 });
 
@@ -577,6 +562,63 @@ app.post('/api/admin/adjust-hearts', (req, res) => {
     res.json({ success: true, message: 'Ürəklər yeniləndi.', user: storage.data.users[username] });
 });
 
+// API: Admin approve receipt
+app.post('/api/admin/approve-receipt', (req, res) => {
+    const { receiptId, pointsAmount, password } = req.body;
+    if (password !== 'admin331234') {
+        return res.status(403).json({ success: false, message: 'Admin parol səhvdir.' });
+    }
+
+    const receipt = storage.data.receipts.find(r => r.id === receiptId);
+    if (!receipt) {
+        return res.status(404).json({ success: false, message: 'Çek tapılmadı.' });
+    }
+    if (receipt.status === 'approved') {
+        return res.status(400).json({ success: false, message: 'Bu çek artıq təsdiqlənib.' });
+    }
+
+    const points = parseInt(pointsAmount) || 10;
+    const u = receipt.username;
+
+    if (!storage.data.users[u]) {
+        storage.data.users[u] = { pin: '0000', donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '', blockedUsers: [] };
+    }
+    storage.data.users[u].donationsCount += 1;
+    storage.data.users[u].points += points;
+    storage.data.users[u].hearts = (storage.data.users[u].hearts || 0) + 1;
+    storage.saveUsers();
+
+    const campaign = storage.data.campaigns.find(c => c.id === receipt.campaignId);
+    if (campaign) {
+        campaign.current += 1;
+        storage.saveCampaigns();
+    }
+
+    receipt.status = 'approved';
+    receipt.awardedPoints = points;
+    storage.saveReceipts();
+
+    res.json({ success: true, message: 'Çek təsdiqləndi, iştirakçıya xal və ürək verildi.', user: storage.data.users[u] });
+});
+
+// API: Admin reject receipt
+app.post('/api/admin/reject-receipt', (req, res) => {
+    const { receiptId, password } = req.body;
+    if (password !== 'admin331234') {
+        return res.status(403).json({ success: false, message: 'Admin parol səhvdir.' });
+    }
+
+    const receipt = storage.data.receipts.find(r => r.id === receiptId);
+    if (!receipt) {
+        return res.status(404).json({ success: false, message: 'Çek tapılmadı.' });
+    }
+
+    receipt.status = 'rejected';
+    storage.saveReceipts();
+
+    res.json({ success: true, message: 'Çek imtina edildi.' });
+});
+
 // API: Admin delete specific receipt folder (100 receipts)
 app.post('/api/admin/delete-folder', (req, res) => {
     const { folderIndex, password } = req.body;
@@ -592,7 +634,6 @@ app.post('/api/admin/delete-folder', (req, res) => {
 
     const start = fIdx * FOLDER_SIZE;
 
-    // Remove receipts in this range
     if (start < storage.data.receipts.length) {
         storage.data.receipts.splice(start, FOLDER_SIZE);
         storage.saveReceipts();

@@ -140,7 +140,7 @@
             <!-- Receipts Collapsible Folders Section -->
             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden space-y-2">
                 <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
-                    <h2 class="font-bold text-slate-800 text-xs">📸 Göndərilən Çek Qovluqları (Hərəsində 100 ədəd)</h2>
+                    <h2 class="font-bold text-slate-800 text-xs">📸 Çeklərin Yoxlanılması və Təsdiqi (Hər qovluqda 100 ədəd)</h2>
                     <button onclick="clearAllReceipts()" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-200 transition">🗑️ Bütün Çekləri Təmizlə</button>
                 </div>
                 <!-- Folders Accordion Container -->
@@ -536,11 +536,27 @@
                         receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal(${actualIndex})" class="w-12 h-12 object-cover rounded-lg border bg-white p-0.5 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
                     }
 
+                    let statusActionHtml = '';
+                    if (r.status === 'approved') {
+                        statusActionHtml = `<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg text-[10px] font-bold">✅ Təsdiqlənib (${r.awardedPoints || 10} xal)</span>`;
+                    } else if (r.status === 'rejected') {
+                        statusActionHtml = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded-lg text-[10px] font-bold">❌ Rədd edildi</span>`;
+                    } else {
+                        statusActionHtml = `
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <input type="number" id="receiptPoints_${r.id}" value="10" class="w-12 p-1 border rounded text-center text-xs font-bold bg-white" min="1" title="Xal miqdarı">
+                                <button onclick="approveReceipt('${r.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold transition">✅ Təsdiq</button>
+                                <button onclick="rejectReceipt('${r.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded-lg text-[10px] font-bold transition">❌ İmtina</button>
+                            </div>
+                        `;
+                    }
+
                     rowsHtml += `
                         <tr class="hover:bg-slate-50">
                             <td class="p-2 text-slate-500 whitespace-nowrap">${dateStr} ${timeStr}</td>
-                            <td class="p-2 font-bold text-slate-800">${r.username}</td>
+                            <td class="p-2 font-bold text-slate-800">${escapeHtml(r.username)}</td>
                             <td class="p-2">${receiptMedia}</td>
+                            <td class="p-2">${statusActionHtml}</td>
                         </tr>
                     `;
                 });
@@ -563,6 +579,7 @@
                                         <th class="p-2">Vaxt</th>
                                         <th class="p-2">İştirakçı</th>
                                         <th class="p-2">Çek Şəkli</th>
+                                        <th class="p-2">Status / Təsdiq</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-200">
@@ -582,6 +599,47 @@
                 openFolderIndex = fIdx; // open this one
             }
             renderAdminReceipts();
+        }
+
+        async function approveReceipt(receiptId) {
+            const pointsInput = document.getElementById(`receiptPoints_${receiptId}`);
+            const pointsAmount = pointsInput ? parseInt(pointsInput.value) || 10 : 10;
+
+            try {
+                const res = await fetch(API_BASE + '/api/admin/approve-receipt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ receiptId, pointsAmount, password: ADMIN_PASS })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadAdminData();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('Təsdiqlənərkən xəta baş verdi.');
+            }
+        }
+
+        async function rejectReceipt(receiptId) {
+            if (!confirm('Bu çeki imtina etmək istədiyinizə əminsiniz?')) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/admin/reject-receipt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ receiptId, password: ADMIN_PASS })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadAdminData();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('İmtina edilərkən xəta baş verdi.');
+            }
         }
 
         async function deleteFolder(fIdx) {
