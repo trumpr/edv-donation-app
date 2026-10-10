@@ -854,10 +854,10 @@
             }
         }
 
-        // Notification Polling
+        // Notification Polling (Super fast 2s)
         function startNotificationPolling() {
             if (notifInterval) clearInterval(notifInterval);
-            notifInterval = setInterval(checkUnreadMessages, 5000);
+            notifInterval = setInterval(checkUnreadMessages, 2000);
         }
 
         async function checkUnreadMessages() {
@@ -954,7 +954,6 @@
                 const res = await fetch(API_BASE + '/api/leaderboard');
                 const users = await res.json();
 
-                // Fetch unread messages to highlight senders
                 const unreadRes = await fetch(API_BASE + `/api/unread?username=${currentUser}`);
                 const unreadData = await unreadRes.json();
                 const unreadSenders = {};
@@ -972,7 +971,6 @@
 
                 const otherUsers = users.filter(u => u.username.toLowerCase() !== currentUser.toLowerCase());
 
-                // Filter out hidden chats unless there's an unread message
                 const visibleUsers = otherUsers.filter(u => {
                     const uLower = u.username.toLowerCase();
                     const unreadCount = unreadSenders[uLower] || 0;
@@ -1040,7 +1038,6 @@
             document.getElementById('blockChatBtn').classList.remove('hidden');
             document.getElementById('chatTitleUsername').innerText = username;
 
-            // Remove from hiddenChats if they start chatting again
             let hiddenChats = JSON.parse(localStorage.getItem(`hiddenChats_${currentUser}`) || '[]');
             if (hiddenChats.includes(username.toLowerCase())) {
                 hiddenChats = hiddenChats.filter(h => h !== username.toLowerCase());
@@ -1061,7 +1058,7 @@
             checkBlockStatus();
             fetchMessages();
             if (chatInterval) clearInterval(chatInterval);
-            chatInterval = setInterval(fetchMessages, 4000);
+            chatInterval = setInterval(fetchMessages, 1200); // Super fast 1.2s polling
         }
 
         async function markMessagesAsRead(senderUsername) {
@@ -1193,11 +1190,30 @@
             }
         }
 
+        // --- Optimistic UI for Super Fast Instant Messaging ---
         async function sendPrivateMessage() {
             if (!currentUser || !activeChatUser) return;
             const textInput = document.getElementById('chatMessageInput');
             const text = textInput.value.trim();
             if (!text) return;
+
+            // Instant Optimistic Append
+            const listEl = document.getElementById('chatMessagesList');
+            if (listEl.querySelector('p.italic')) {
+                listEl.innerHTML = '';
+            }
+            const tempTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            listEl.innerHTML += `
+                <div class="max-w-[85%] ml-auto bg-[#005c4b] text-white rounded-2xl rounded-tr-xs p-3 text-xs space-y-1 shadow-sm">
+                    <p class="whitespace-pre-line leading-relaxed">${escapeHtml(text)}</p>
+                    <div class="flex items-center justify-end gap-1 pt-0.5">
+                        <span class="text-[9px] text-emerald-200">${tempTime}</span>
+                        <span class="text-slate-400 font-extrabold ml-1 tracking-tighter">✓</span>
+                    </div>
+                </div>
+            `;
+            listEl.scrollTop = listEl.scrollHeight;
+            textInput.value = '';
 
             try {
                 const res = await fetch(API_BASE + '/api/messages', {
@@ -1211,14 +1227,15 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    textInput.value = '';
                     fetchMessages();
                     fetchUserStats();
                 } else {
                     alert('Xəta: ' + data.message);
+                    fetchMessages();
                 }
             } catch (e) {
                 alert('Mesaj göndərərkən xəta baş verdi.');
+                fetchMessages();
             }
         }
 
