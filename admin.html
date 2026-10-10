@@ -6,7 +6,7 @@
     <title>Çek Fondu - Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans p-4 sm:p-6">
+<body class="bg-slate-100 text-slate-800 font-sans pb-10">
     <!-- Password Login Modal -->
     <div id="loginModal" class="fixed inset-0 bg-slate-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-sm w-full shadow-2xl space-y-4">
@@ -28,68 +28,98 @@
         </div>
     </div>
 
-    <!-- Admin Dashboard -->
-    <div id="adminDashboard" class="max-w-6xl mx-auto space-y-6 hidden">
-        <header class="bg-slate-900 text-white p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center shadow-lg gap-4">
-            <div>
-                <h1 class="text-2xl font-extrabold">👑 Admin Panel</h1>
-                <p class="text-xs text-slate-400">Canlı idarəetmə və çek izləmə</p>
-            </div>
+    <div class="max-w-4xl mx-auto min-h-screen bg-white shadow-xl flex flex-col justify-between rounded-2xl my-0 sm:my-6 overflow-hidden relative">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-6 text-center shadow-lg relative">
+            <h1 class="text-3xl font-extrabold tracking-tight">Çek İanə Fondu - Admin</h1>
+            <p class="text-sm text-emerald-100 mt-1">Canlı idarəetmə və çek izləmə paneli</p>
 
-            <!-- Server Status Indicator -->
-            <div id="serverStatus" class="flex items-center gap-2 bg-slate-800 px-3.5 py-2 rounded-xl border border-slate-700 text-xs font-semibold shadow-inner">
-                <span id="statusDot" class="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
-                <span id="statusText" class="text-slate-300">Yoxlanılır...</span>
-            </div>
-
-            <div class="flex gap-2">
-                <a href="/" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700">Ana Səhifə</a>
-                <button onclick="adminLogout()" class="bg-red-600 px-3 py-2 rounded-xl text-sm font-bold hover:bg-red-700">Çıxış</button>
-            </div>
+            <!-- Hamburger Menu Button -->
+            <button onclick="toggleHamburgerMenu()" class="absolute top-6 right-6 text-white p-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 transition flex items-center justify-center shadow-md">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
         </header>
 
-        <!-- Stats Overview -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white p-5 rounded-2xl border shadow-sm">
-                <p class="text-xs text-slate-500 font-semibold">Ümumi Çek Şəkli Sayı</p>
-                <p class="text-2xl font-black text-slate-900 mt-1" id="totalReceipts">0</p>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border shadow-sm">
-                <p class="text-xs text-slate-500 font-semibold">Qeydiyyatda Olan İstifadəçilər</p>
-                <p class="text-2xl font-black text-emerald-600 mt-1" id="totalUsers">0</p>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border shadow-sm">
-                <p class="text-xs text-slate-500 font-semibold">Yığılan Ümumi Məbləğ</p>
-                <p class="text-2xl font-black text-blue-600 mt-1" id="totalAmount">0 AZN</p>
+        <!-- Hamburger Slide-over Menu -->
+        <div id="hamburgerMenuModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-end" onclick="toggleHamburgerMenu()">
+            <div class="bg-white w-72 h-full shadow-2xl p-6 flex flex-col justify-between space-y-6" onclick="event.stopPropagation()">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><span>⚙️</span> Admin Menyü</h3>
+                        <button onclick="toggleHamburgerMenu()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+                    </div>
+                    <div class="space-y-2 pt-2">
+                        <a href="/" class="w-full text-left bg-emerald-50 hover:bg-emerald-100 text-emerald-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition block">
+                            <span>🏠</span> Ana Səhifəyə Qayıt
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <button onclick="toggleHamburgerMenu(); adminLogout()" class="w-full bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition">
+                        <span>🚪</span> Çıxış
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Receipts Table -->
-        <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-            <div class="p-5 border-b bg-slate-50 flex justify-between items-center">
-                <h2 class="font-bold text-slate-800">Göndərilən Çek Şəkilləri (Canlı Yenilənir)</h2>
-                <div class="flex gap-2">
-                    <button onclick="clearAllReceipts()" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-200 transition">🗑️ Çekləri Təmizlə</button>
-                    <button onclick="loadAdminData()" class="bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-300">Yenilə</button>
+        <!-- Admin Dashboard Content -->
+        <main id="adminDashboard" class="p-5 flex-1 space-y-6 hidden">
+            <!-- Server Status Indicator -->
+            <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border shadow-sm">
+                <div class="flex items-center gap-2">
+                    <span id="statusDot" class="w-3.5 h-3.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span id="statusText" class="text-xs font-bold text-slate-700">Server yoxlanılır...</span>
+                </div>
+                <button onclick="loadAdminData()" class="bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold transition">Yenilə 🔄</button>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-slate-50 p-5 rounded-2xl border shadow-sm">
+                    <p class="text-xs text-slate-500 font-semibold">Ümumi Çek Şəkli Sayı</p>
+                    <p class="text-2xl font-black text-slate-900 mt-1" id="totalReceipts">0</p>
+                </div>
+                <div class="bg-slate-50 p-5 rounded-2xl border shadow-sm">
+                    <p class="text-xs text-slate-500 font-semibold">Qeydiyyatda Olan İstifadəçilər</p>
+                    <p class="text-2xl font-black text-emerald-600 mt-1" id="totalUsers">0</p>
+                </div>
+                <div class="bg-slate-50 p-5 rounded-2xl border shadow-sm">
+                    <p class="text-xs text-slate-500 font-semibold">Yığılan Ümumi Məbləğ</p>
+                    <p class="text-2xl font-black text-blue-600 mt-1" id="totalAmount">0 AZN</p>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
-                        <tr>
-                            <th class="p-3">Vaxt</th>
-                            <th class="p-3">İştirakçı</th>
-                            <th class="p-3">Kampaniya</th>
-                            <th class="p-3">Çek Şəkli</th>
-                            <th class="p-3">Məbləğ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="receiptsTableBody" class="divide-y divide-slate-200">
-                        <!-- Dynamic rows -->
-                    </tbody>
-                </table>
+
+            <!-- Receipts Table -->
+            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                <div class="p-5 border-b bg-slate-50 flex justify-between items-center">
+                    <h2 class="font-bold text-slate-800 text-sm">Göndərilən Çek Şəkilləri (Canlı Yenilənir)</h2>
+                    <button onclick="clearAllReceipts()" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-200 transition">🗑️ Çekləri Təmizlə</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+                            <tr>
+                                <th class="p-3">Vaxt</th>
+                                <th class="p-3">İştirakçı</th>
+                                <th class="p-3">Kampaniya</th>
+                                <th class="p-3">Çek Şəkli</th>
+                                <th class="p-3">Məbləğ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receiptsTableBody" class="divide-y divide-slate-200 text-xs">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-100 p-4 text-center text-xs text-slate-500 border-t mt-4">
+            &copy; 2026 Çek İanə və EDV Platforması - Admin Panel.
+        </footer>
     </div>
 
     <script>
@@ -104,6 +134,23 @@
                 showDashboard();
             }
         });
+
+        async function loadConfig() {
+            try {
+                const res = await fetch('./config.json');
+                const config = await res.json();
+                if (config && config.apiUrl) {
+                    API_BASE = config.apiUrl;
+                }
+            } catch (e) {
+                console.error("Config oxunmadı, fallback istifadə olunur:", API_BASE);
+            }
+        }
+
+        function toggleHamburgerMenu() {
+            const modal = document.getElementById('hamburgerMenuModal');
+            modal.classList.toggle('hidden');
+        }
 
         function checkAdminPassword() {
             const pass = document.getElementById('adminPasswordInput').value;
@@ -133,23 +180,7 @@
             autoRefreshInterval = setInterval(loadAdminData, 10000);
         }
 
-        async function loadConfig() {
-            try {
-                const res = await fetch('./config.json');
-                const config = await res.json();
-                if (config && config.apiUrl) {
-                    API_BASE = config.apiUrl;
-                }
-            } catch (e) {
-                console.error("Config oxunmadı, fallback istifadə olunur:", API_BASE);
-            }
-        }
-
         async function loadAdminData() {
-            if (!API_BASE) {
-                await loadConfig();
-            }
-
             try {
                 const res = await fetch(API_BASE + '/api/admin/data');
                 const contentType = res.headers.get("content-type");
@@ -160,8 +191,8 @@
                 allReceipts = data.receipts || [];
 
                 // Turn status indicator GREEN
-                document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-emerald-500";
-                document.getElementById('statusText').innerText = "Qoşuludur (Online)";
+                document.getElementById('statusDot').className = "w-3.5 h-3.5 rounded-full bg-emerald-500 animate-pulse";
+                document.getElementById('statusText').innerText = "Server Qoşuludur (Online)";
 
                 // Stats
                 document.getElementById('totalReceipts').innerText = allReceipts.length;
@@ -186,14 +217,14 @@
 
                     let receiptMedia = `<span class="text-xs text-slate-400 italic">Şəkil yoxdur</span>`;
                     if (r.imageBase64) {
-                        receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal(${actualIndex})" class="w-20 h-20 object-cover rounded-xl border bg-white p-1 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
+                        receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal(${actualIndex})" class="w-16 h-16 object-cover rounded-xl border bg-white p-1 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
                     }
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50">
-                            <td class="p-3 text-xs text-slate-500 whitespace-nowrap">${timeStr}</td>
+                            <td class="p-3 text-slate-500 whitespace-nowrap">${timeStr}</td>
                             <td class="p-3 font-bold text-slate-800">${r.username}</td>
-                            <td class="p-3 text-xs text-slate-600">${campaignTitle}</td>
+                            <td class="p-3 text-slate-600">${campaignTitle}</td>
                             <td class="p-3">
                                 ${receiptMedia}
                             </td>
@@ -203,8 +234,8 @@
                 });
             } catch (e) {
                 // Turn status indicator RED
-                document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-red-500 animate-pulse";
-                document.getElementById('statusText').innerText = "Qoşulmur (Offline / Cloudflare)";
+                document.getElementById('statusDot').className = "w-3.5 h-3.5 rounded-full bg-red-500 animate-pulse";
+                document.getElementById('statusText').innerText = "Server Qoşulmur (Offline / Cloudflare)";
                 console.error(e);
             }
         }
@@ -240,6 +271,7 @@
         }
 
         function campaignTitleShort(title) {
+            title = title || '';
             return title.length > 25 ? title.substring(0, 25) + '...' : title;
         }
     </script>
