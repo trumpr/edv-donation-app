@@ -32,7 +32,7 @@
         <!-- Header -->
         <header class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-6 text-center shadow-lg relative">
             <h1 class="text-3xl font-extrabold tracking-tight">Çek İanə - Admin</h1>
-            <p class="text-sm text-emerald-100 mt-1">Canlı idarəetmə və paylaşım paneli</p>
+            <p class="text-sm text-emerald-100 mt-1">Canlı idarəetmə və iştirakçı paneli</p>
 
             <!-- Hamburger Menu Button -->
             <button onclick="toggleHamburgerMenu()" class="absolute top-6 right-6 text-white p-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 transition flex items-center justify-center shadow-md">
@@ -104,6 +104,14 @@
                 </div>
             </div>
 
+            <!-- Users Management Section -->
+            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden p-4 space-y-3">
+                <h2 class="font-bold text-slate-800 text-xs flex items-center gap-2"><span>👥</span> Qeydiyyatdan Keçmiş İştirakçılar və İdarəetmə</h2>
+                <div id="adminUsersList" class="space-y-2 max-h-72 overflow-y-auto">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
             <!-- Admin Posts Management List -->
             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden p-4 space-y-3">
                 <h2 class="font-bold text-slate-800 text-xs">📢 Paylaşılan Elanlar</h2>
@@ -146,6 +154,7 @@
         let API_BASE = "https://sections-championships-advised-meetings.trycloudflare.com";
         let allReceipts = [];
         let allPosts = [];
+        let allUsers = {};
         let adminPostImageBase64 = '';
         let autoRefreshInterval = null;
 
@@ -200,7 +209,6 @@
             document.getElementById('adminDashboard').classList.remove('hidden');
             loadAdminData();
 
-            // Auto refresh data every 10 seconds
             if (autoRefreshInterval) clearInterval(autoRefreshInterval);
             autoRefreshInterval = setInterval(loadAdminData, 10000);
         }
@@ -287,6 +295,26 @@
             }
         }
 
+        async function deleteUser(username) {
+            if (!confirm(`"${username}" adlı iştirakçını silmək istədiyinizə əminsiniz?`)) return;
+            try {
+                const res = await fetch(API_BASE + '/api/admin/delete-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password: ADMIN_PASS })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('İştirakçı silindi.');
+                    loadAdminData();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('İştirakçı silinərkən xəta baş verdi.');
+            }
+        }
+
         async function loadAdminData() {
             try {
                 const res = await fetch(API_BASE + '/api/admin/data');
@@ -297,6 +325,7 @@
                 const data = await res.json();
                 allReceipts = data.receipts || [];
                 allPosts = data.posts || [];
+                allUsers = data.users || {};
 
                 // Turn status indicator GREEN
                 document.getElementById('statusDot').className = "w-3.5 h-3.5 rounded-full bg-emerald-500 animate-pulse";
@@ -304,7 +333,39 @@
 
                 // Stats
                 document.getElementById('totalReceipts').innerText = allReceipts.length;
-                document.getElementById('totalUsers').innerText = Object.keys(data.users || {}).length;
+                document.getElementById('totalUsers').innerText = Object.keys(allUsers).length;
+
+                // Users Management List
+                const usersListEl = document.getElementById('adminUsersList');
+                usersListEl.innerHTML = '';
+                const usersEntries = Object.entries(allUsers);
+                if (usersEntries.length === 0) {
+                    usersListEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center">Hələ qeydiyyatdan keçən iştirakçı yoxdur.</p>';
+                } else {
+                    usersEntries.forEach(([username, stats]) => {
+                        let avatarHtml = `<div class="w-8 h-8 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-xs shrink-0">${username.charAt(0).toUpperCase()}</div>`;
+                        if (stats.avatarBase64) {
+                            avatarHtml = `<img src="${stats.avatarBase64}" class="w-8 h-8 rounded-full object-cover shrink-0">`;
+                        }
+                        let details = [];
+                        if (stats.age) details.push(stats.age + ' yaş');
+                        if (stats.region) details.push(stats.region);
+                        const detailsStr = details.length > 0 ? ` (${details.join(', ')})` : '';
+
+                        usersListEl.innerHTML += `
+                            <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border text-xs">
+                                <div class="flex items-center gap-2.5 truncate">
+                                    ${avatarHtml}
+                                    <div class="truncate">
+                                        <p class="font-bold text-slate-800 truncate">${escapeHtml(username)}${detailsStr}</p>
+                                        <p class="text-[10px] text-emerald-700">Xal: ${stats.points || 0} | Çek: ${stats.donationsCount || 0}</p>
+                                    </div>
+                                </div>
+                                <button onclick="deleteUser('${escapeHtml(username)}')" class="bg-red-100 hover:bg-red-200 text-red-600 px-2.5 py-1 rounded-lg text-xs font-bold shrink-0">Sil</button>
+                            </div>
+                        `;
+                    });
+                }
 
                 // Admin Posts List
                 const postsListEl = document.getElementById('adminPostsList');

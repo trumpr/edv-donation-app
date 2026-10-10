@@ -370,6 +370,22 @@ app.post('/api/posts/:id/comment', (req, res) => {
     res.json({ success: true, message: 'Komment əlavə olundu.', comment: newComment });
 });
 
+// API: Admin delete user
+app.post('/api/admin/delete-user', (req, res) => {
+    const { username, password } = req.body;
+    if (password !== 'admin331234') {
+        return res.status(403).json({ success: false, message: 'Admin parol səhvdir.' });
+    }
+    if (!username || !storage.data.users[username]) {
+        return res.status(404).json({ success: false, message: 'İştirakçı tapılmadı.' });
+    }
+
+    delete storage.data.users[username];
+    storage.saveUsers();
+
+    res.json({ success: true, message: 'İştirakçı uğurla silindi.' });
+});
+
 // API: Admin data overview
 app.get('/api/admin/data', (req, res) => {
     res.json({
