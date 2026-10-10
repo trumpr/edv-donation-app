@@ -242,7 +242,7 @@
                 <input type="file" id="receiptPhotoInput" accept="image/*" capture="environment" class="hidden" onchange="uploadReceiptPhoto(event)">
                 <div onclick="triggerPhotoCapture()" class="cursor-pointer group flex items-center gap-2.5 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-500 transition">
                     <img src="./qr.jpeg" alt="QR Yüklə" class="w-9 h-9 object-cover rounded-lg border border-emerald-400 shadow-xs group-hover:scale-105 transition transform">
-                    <span class="text-xs font-bold text-slate-800">EDV Çeki Çək</span>
+                    <span class="text-xs font-bold text-slate-800">ƏDV Çək</span>
                 </div>
             </div>
 
@@ -770,7 +770,7 @@
                     }
 
                     listEl.innerHTML += `
-                        <div onclick="startChatWith('${u.username}')" class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 hover:border-emerald-500 cursor-pointer shadow-xs transition">
+                        <div onclick="startChatWith('${u.username}')" class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-500 cursor-pointer shadow-xs transition">
                             <div class="flex items-center gap-3">
                                 ${avatarHtml}
                                 <span class="font-bold text-slate-800 text-sm">${u.username}</span>
