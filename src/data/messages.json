@@ -101,45 +101,5 @@
     "receiver": "eldar",
     "text": "Vgdhb",
     "timestamp": "2026-10-10T09:14:08.701Z"
-  },
-  {
-    "id": "1791625974604",
-    "sender": "Mehdi",
-    "receiver": "aygun",
-    "text": "Salam necesiz?",
-    "timestamp": "2026-10-10T09:52:54.604Z",
-    "read": true
-  },
-  {
-    "id": "1791626118638",
-    "sender": "Mehdi",
-    "receiver": "aygun",
-    "text": "Yaxsi",
-    "timestamp": "2026-10-10T09:55:18.638Z",
-    "read": true
-  },
-  {
-    "id": "1791631710662",
-    "sender": "Mehdi",
-    "receiver": "aygun",
-    "text": "Sagol sen necesen?",
-    "read": true,
-    "timestamp": "2026-10-10T11:28:30.673Z"
-  },
-  {
-    "id": "1791631924450",
-    "sender": "aygun",
-    "receiver": "Mehdi",
-    "text": "salam",
-    "read": true,
-    "timestamp": "2026-10-10T11:32:04.450Z"
-  },
-  {
-    "id": "1791631966748",
-    "sender": "Mehdi",
-    "receiver": "aygun",
-    "text": "Sagol",
-    "read": true,
-    "timestamp": "2026-10-10T11:32:46.748Z"
   }
 ]

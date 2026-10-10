@@ -282,7 +282,10 @@
 
                 <!-- User selection view -->
                 <div id="chatSelectUserView" class="p-4 flex-1 overflow-y-auto space-y-3 bg-white">
-                    <p class="text-xs font-bold text-slate-600 mb-2">Söhbət etmək üçün iştirakçı seçin:</p>
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-xs font-bold text-slate-600">Aktiv Söhbətlər:</p>
+                        <button onclick="openParticipantsModal(); closeChatModal();" class="text-xs bg-emerald-50 text-emerald-800 font-bold px-3 py-1 rounded-lg border border-emerald-200 hover:bg-emerald-100 transition">➕ Yeni Söhbət Başlat</button>
+                    </div>
                     <div id="chatUserList" class="space-y-2">
                         <!-- Loaded dynamically -->
                     </div>
@@ -961,16 +964,30 @@
                     });
                 }
 
+                let hiddenChats = JSON.parse(localStorage.getItem(`hiddenChats_${currentUser}`) || '[]');
+
                 const listEl = document.getElementById('chatUserList');
                 listEl.innerHTML = '';
 
                 const otherUsers = users.filter(u => u.username.toLowerCase() !== currentUser.toLowerCase());
-                if (otherUsers.length === 0) {
-                    listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center">Başqa iştirakçı yoxdur.</p>';
+
+                // Filter out hidden chats unless there's an unread message
+                const visibleUsers = otherUsers.filter(u => {
+                    const uLower = u.username.toLowerCase();
+                    const unreadCount = unreadSenders[uLower] || 0;
+                    if (unreadCount > 0 && hiddenChats.includes(uLower)) {
+                        hiddenChats = hiddenChats.filter(h => h !== uLower);
+                        localStorage.setItem(`hiddenChats_${currentUser}`, JSON.stringify(hiddenChats));
+                    }
+                    return !(hiddenChats.includes(uLower) && unreadCount === 0);
+                });
+
+                if (visibleUsers.length === 0) {
+                    listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center py-4">Aktiv söhbət yoxdur. Yeni söhbətə başlayın!</p>';
                     return;
                 }
 
-                otherUsers.forEach(u => {
+                visibleUsers.forEach(u => {
                     let avatarHtml = `<div class="w-8 h-8 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-xs shrink-0">${u.username.charAt(0).toUpperCase()}</div>`;
                     if (u.avatarBase64) {
                         avatarHtml = `<img src="${u.avatarBase64}" class="w-8 h-8 rounded-full object-cover shrink-0">`;
@@ -1018,6 +1035,13 @@
             document.getElementById('deleteChatBtn').classList.remove('hidden');
             document.getElementById('chatTitleUsername').innerText = username;
 
+            // Remove from hiddenChats if they start chatting again
+            let hiddenChats = JSON.parse(localStorage.getItem(`hiddenChats_${currentUser}`) || '[]');
+            if (hiddenChats.includes(username.toLowerCase())) {
+                hiddenChats = hiddenChats.filter(h => h !== username.toLowerCase());
+                localStorage.setItem(`hiddenChats_${currentUser}`, JSON.stringify(hiddenChats));
+            }
+
             const avatarHeader = document.getElementById('chatHeaderAvatar');
             if (avatarHeader) {
                 const foundUser = allParticipants.find(p => p.username.toLowerCase() === username.toLowerCase());
@@ -1050,22 +1074,23 @@
 
         async function deleteActiveChat() {
             if (!currentUser || !activeChatUser) return;
-            if (!confirm(`"${activeChatUser}" ilə olan bütün yazışmaları təmizləmək istədiyinizə əminsiniz?`)) return;
+            if (!confirm(`"${activeChatUser}" ilə olan söhbəti siyahıdan silmək istədiyinizə əminsiniz?`)) return;
+
+            let hiddenChats = JSON.parse(localStorage.getItem(`hiddenChats_${currentUser}`) || '[]');
+            if (!hiddenChats.includes(activeChatUser.toLowerCase())) {
+                hiddenChats.push(activeChatUser.toLowerCase());
+                localStorage.setItem(`hiddenChats_${currentUser}`, JSON.stringify(hiddenChats));
+            }
 
             try {
-                const res = await fetch(API_BASE + '/api/messages/delete-chat', {
+                await fetch(API_BASE + '/api/messages/delete-chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user1: currentUser, user2: activeChatUser })
                 });
-                const data = await res.json();
-                if (data.success) {
-                    alert('Söhbət təmizləndi.');
-                    showChatUserSelect();
-                    fetchChatUsers();
-                } else {
-                    alert('Xəta: ' + data.message);
-                }
+                alert('Söhbət silindi.');
+                showChatUserSelect();
+                fetchChatUsers();
             } catch (e) {
                 alert('Söhbət silinərkən xəta baş verdi.');
             }
