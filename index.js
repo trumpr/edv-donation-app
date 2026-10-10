@@ -443,6 +443,26 @@ app.post('/api/admin/adjust-points', (req, res) => {
     res.json({ success: true, message: 'Xallar yeniləndi.', user: storage.data.users[username] });
 });
 
+// API: Admin adjust user hearts
+app.post('/api/admin/adjust-hearts', (req, res) => {
+    const { username, amount, password } = req.body;
+    if (password !== 'admin331234') {
+        return res.status(403).json({ success: false, message: 'Admin parol səhvdir.' });
+    }
+    if (!username || !storage.data.users[username]) {
+        return res.status(404).json({ success: false, message: 'İştirakçı tapılmadı.' });
+    }
+
+    const numAmount = parseInt(amount) || 0;
+    if (storage.data.users[username].hearts === undefined) {
+        storage.data.users[username].hearts = storage.data.users[username].donationsCount || 0;
+    }
+    storage.data.users[username].hearts = Math.max(0, storage.data.users[username].hearts + numAmount);
+    storage.saveUsers();
+
+    res.json({ success: true, message: 'Ürəklər yeniləndi.', user: storage.data.users[username] });
+});
+
 // API: Admin data overview
 app.get('/api/admin/data', (req, res) => {
     res.json({

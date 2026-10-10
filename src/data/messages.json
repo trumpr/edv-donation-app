@@ -102,13 +102,15 @@
     "sender": "Mehdi",
     "receiver": "aygun",
     "text": "Salam necesiz?",
-    "timestamp": "2026-10-10T09:52:54.604Z"
+    "timestamp": "2026-10-10T09:52:54.604Z",
+    "read": true
   },
   {
     "id": "1791626118638",
     "sender": "Mehdi",
     "receiver": "aygun",
     "text": "Yaxsi",
-    "timestamp": "2026-10-10T09:55:18.638Z"
+    "timestamp": "2026-10-10T09:55:18.638Z",
+    "read": true
   }
 ]

@@ -30,10 +30,10 @@
 
     <!-- Admin Users Modal -->
     <div id="adminUsersModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl flex flex-col h-[85vh] overflow-hidden p-5 space-y-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col h-[85vh] overflow-hidden p-5 space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
                 <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span>👥</span> İştirakçılar və Xal İdarəetməsi
+                    <span>👥</span> İştirakçılar, Xal və Ürək İdarəetməsi
                 </h2>
                 <button onclick="closeAdminUsersModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
             </div>
@@ -124,7 +124,7 @@
                 </div>
                 <!-- Users List Modal Button -->
                 <button onclick="openAdminUsersModal()" class="w-full bg-amber-50 hover:bg-amber-100 text-amber-900 p-4 rounded-2xl border border-amber-200 font-bold text-xs flex items-center justify-between transition shadow-sm">
-                    <span class="flex items-center gap-2 text-sm"><span>👥</span> Qeydiyyatdan Keçmiş İştirakçılar Siyahısı</span>
+                    <span class="flex items-center gap-2 text-sm"><span>👥</span> İştirakçılar Siyahısı və İdarəetmə</span>
                     <span id="adminUsersCountBadge" class="bg-amber-200 text-amber-900 px-3 py-1 rounded-xl text-xs font-extrabold">0 nəfər</span>
                 </button>
             </div>
@@ -168,7 +168,7 @@
 
     <script>
         const ADMIN_PASS = "admin331234";
-        let API_BASE = "https://sections-championships-advised-meetings.trycloudflare.com";
+        let API_BASE = "https://revolutionary-omissions-euros-warranty.trycloudflare.com";
         let allReceipts = [];
         let allPosts = [];
         let allUsers = {};
@@ -188,13 +188,13 @@
                 return;
             }
             try {
-                const res = await fetch('./config.json');
+                const res = await fetch('./config.json?t=' + Date.now());
                 const config = await res.json();
                 if (config && config.apiUrl) {
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                console.error("Config oxunmadı:", e);
+                console.error("Config oxunmadı, sərt yazılmış API_BASE istifadə olunur:", e);
             }
         }
 
@@ -257,20 +257,30 @@
                 if (stats.age) details.push(stats.age + ' yaş');
                 if (stats.region) details.push(stats.region);
                 const detailsStr = details.length > 0 ? ` (${details.join(', ')})` : '';
+                const heartsVal = stats.hearts !== undefined ? stats.hearts : (stats.donationsCount || 0);
 
                 listEl.innerHTML += `
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-50 p-3 rounded-xl border text-xs shadow-xs gap-2">
-                        <div class="flex items-center gap-3 truncate w-full sm:w-auto">
+                    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between bg-slate-50 p-3 rounded-xl border text-xs shadow-xs gap-3">
+                        <div class="flex items-center gap-3 truncate w-full lg:w-auto">
                             ${avatarHtml}
                             <div class="truncate">
                                 <p class="font-bold text-slate-800 truncate">${escapeHtml(username)}${detailsStr}</p>
-                                <p class="text-[10px] text-emerald-700 font-semibold">Xal: ${stats.points || 0} | Çek: ${stats.donationsCount || 0}</p>
+                                <p class="text-[10px] text-emerald-700 font-semibold">Xal: ${stats.points || 0} | Çek: ${stats.donationsCount || 0} | Ürək: ${heartsVal} 💚</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1.5 w-full sm:w-auto justify-end">
-                            <input type="number" id="pointsInput_${escapeHtml(username)}" value="10" class="w-16 p-1.5 border rounded-lg text-center text-xs font-bold bg-white" placeholder="Xal" min="1">
-                            <button onclick="customAdjustPoints('${escapeHtml(username)}', 1)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-2 py-1.5 rounded-lg text-xs font-extrabold" title="Xal əlavə et">+ Əlavə</button>
-                            <button onclick="customAdjustPoints('${escapeHtml(username)}', -1)" class="bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1.5 rounded-lg text-xs font-extrabold" title="Xal çıx">- Çıx</button>
+                        <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
+                            <div class="flex items-center gap-1 bg-white p-1 rounded-lg border">
+                                <span class="text-[10px] font-bold text-slate-500">Xal:</span>
+                                <input type="number" id="pointsInput_${escapeHtml(username)}" value="10" class="w-12 p-1 border rounded text-center text-xs font-bold" min="1">
+                                <button onclick="customAdjustPoints('${escapeHtml(username)}', 1)" class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-bold" title="Xal əlavə et">+Xal</button>
+                                <button onclick="customAdjustPoints('${escapeHtml(username)}', -1)" class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold" title="Xal çıx">-Xal</button>
+                            </div>
+                            <div class="flex items-center gap-1 bg-white p-1 rounded-lg border">
+                                <span class="text-[10px] font-bold text-slate-500">Ürək:</span>
+                                <input type="number" id="heartsInput_${escapeHtml(username)}" value="1" class="w-12 p-1 border rounded text-center text-xs font-bold" min="1">
+                                <button onclick="customAdjustHearts('${escapeHtml(username)}', 1)" class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-bold" title="Ürək əlavə et">+💚</button>
+                                <button onclick="customAdjustHearts('${escapeHtml(username)}', -1)" class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold" title="Ürək çıx">-💚</button>
+                            </div>
                             <button onclick="deleteUser('${escapeHtml(username)}')" class="bg-red-100 hover:bg-red-200 text-red-600 px-2.5 py-1.5 rounded-lg text-xs font-bold">Sil</button>
                         </div>
                     </div>
@@ -310,6 +320,30 @@
                 }
             } catch (e) {
                 alert('Xal yenilənərkən xəta baş verdi.');
+            }
+        }
+
+        async function customAdjustHearts(username, multiplier) {
+            const inputEl = document.getElementById(`heartsInput_${username}`);
+            if (!inputEl) return;
+            const val = parseInt(inputEl.value);
+            if (isNaN(val) || val <= 0) return alert('Zəhmət olmasa düzgün ürək miqdarı daxil edin');
+            const amount = val * multiplier;
+
+            try {
+                const res = await fetch(API_BASE + '/api/admin/adjust-hearts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, amount, password: ADMIN_PASS })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadAdminData();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('Ürək yenilənərkən xəta baş verdi.');
             }
         }
 
