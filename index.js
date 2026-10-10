@@ -31,7 +31,6 @@ app.post('/api/login', (req, res) => {
         storage.data.users[u] = {
             pin: pin,
             donationsCount: 0,
-            totalDonated: 0,
             points: 0,
             age: '',
             region: '',
@@ -54,9 +53,9 @@ app.post('/api/login', (req, res) => {
     res.json({ success: true, message: 'Uğurla daxil oldunuz!', user: storage.data.users[u] });
 });
 
-// API: Submit receipt photo or donation
+// API: Submit receipt photo
 app.post('/api/donate', (req, res) => {
-    const { username, campaignId, qrData, amount, imageBase64 } = req.body;
+    const { username, campaignId, qrData, imageBase64 } = req.body;
 
     if (!username) {
         return res.status(400).json({ success: false, message: 'İstifadəçi adı tələb olunur.' });
@@ -68,26 +67,24 @@ app.post('/api/donate', (req, res) => {
         campaignId: campaignId || '1',
         qrData: qrData || 'Çek Şəkli',
         imageBase64: imageBase64 || null,
-        amount: parseFloat(amount) || 1.0,
         timestamp: new Date().toISOString()
     };
 
     storage.data.receipts.push(receiptEntry);
     storage.saveReceipts();
 
-    // Update campaign current amount
+    // Update campaign progress (1 receipt)
     const campaign = storage.data.campaigns.find(c => c.id === campaignId);
     if (campaign) {
-        campaign.current += receiptEntry.amount;
+        campaign.current += 1;
         storage.saveCampaigns();
     }
 
     // Update user stats
     if (!storage.data.users[username]) {
-        storage.data.users[username] = { pin: '0000', donationsCount: 0, totalDonated: 0, points: 0, age: '', region: '', avatarBase64: '' };
+        storage.data.users[username] = { pin: '0000', donationsCount: 0, points: 0, age: '', region: '', avatarBase64: '' };
     }
     storage.data.users[username].donationsCount += 1;
-    storage.data.users[username].totalDonated += receiptEntry.amount;
     storage.data.users[username].points += 10; // 10 points per receipt photo
     storage.saveUsers();
 
@@ -108,7 +105,7 @@ app.post('/api/profile', (req, res) => {
 
     const u = username.trim();
     if (!storage.data.users[u]) {
-        storage.data.users[u] = { pin: '0000', donationsCount: 0, totalDonated: 0, points: 0, age: '', region: '', avatarBase64: '' };
+        storage.data.users[u] = { pin: '0000', donationsCount: 0, points: 0, age: '', region: '', avatarBase64: '' };
     }
 
     storage.data.users[u].age = age || '';
@@ -139,7 +136,7 @@ app.post('/api/profile', (req, res) => {
 // API: Get user stats & profile
 app.get('/api/user/:username', (req, res) => {
     const username = req.params.username.trim();
-    const user = storage.data.users[username] || { donationsCount: 0, totalDonated: 0, points: 0, age: '', region: '', avatarBase64: '' };
+    const user = storage.data.users[username] || { donationsCount: 0, points: 0, age: '', region: '', avatarBase64: '' };
     res.json(user);
 });
 

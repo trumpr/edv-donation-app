@@ -3,21 +3,21 @@
     "id": "1",
     "title": "Azərbaycanın Yaşıllaşdırılması: Hər Çekə 1 Ağac",
     "description": "Göndərilən hər çek sayəsində ölkəmizdə yeni meşə zolaqları salınır və ağaclar əkilir.",
-    "target": 1000,
-    "current": 450
+    "target": 100,
+    "current": 45
   },
   {
     "id": "2",
     "title": "Sahibsiz və Çöl Heyvanlarına Qayğı",
     "description": "Küçə heyvanları üçün sığınacaqlarda qida, su və baytarlıq dəstəyi təmin edilir.",
-    "target": 500,
-    "current": 320
+    "target": 50,
+    "current": 32
   },
   {
     "id": "3",
     "title": "Təmiz Təbiət və Eko-Aksiyalar",
     "description": "Parkların, çimərliklərin və təbiət qoruqlarının təmizlənməsi aksiyalarına dəstək.",
-    "target": 750,
-    "current": 180
+    "target": 75,
+    "current": 18
   }
 ]

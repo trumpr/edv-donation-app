@@ -701,7 +701,6 @@
                             body: JSON.stringify({
                                 username: currentUser,
                                 campaignId,
-                                amount: 1.0,
                                 qrData: 'Çek Şəkli',
                                 imageBase64: compressedBase64
                             })
@@ -757,8 +756,8 @@
                         <p class="text-xs text-slate-600">${c.description}</p>
                         <div>
                             <div class="flex justify-between text-xs font-semibold mb-1 text-slate-700">
-                                <span>Yığılıb: ${c.current} AZN</span>
-                                <span>Hədəf: ${c.target} AZN (${percent}%)</span>
+                                <span>Yığılıb: ${c.current} çek</span>
+                                <span>Hədəf: ${c.target} çek (${percent}%)</span>
                             </div>
                             <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden border">
                                 <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
