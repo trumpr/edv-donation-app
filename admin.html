@@ -28,11 +28,11 @@
         </div>
     </div>
 
-    <div class="max-w-4xl mx-auto min-h-screen bg-white shadow-xl flex flex-col justify-between rounded-2xl my-0 sm:my-6 overflow-hidden relative">
+    <div class="max-w-xl mx-auto min-h-screen bg-white shadow-xl flex flex-col justify-between rounded-2xl my-0 sm:my-6 overflow-hidden relative">
         <!-- Header -->
         <header class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-6 text-center shadow-lg relative">
-            <h1 class="text-3xl font-extrabold tracking-tight">Çek İanə Fondu - Admin</h1>
-            <p class="text-sm text-emerald-100 mt-1">Canlı idarəetmə və çek izləmə paneli</p>
+            <h1 class="text-3xl font-extrabold tracking-tight">Çek İanə - Admin</h1>
+            <p class="text-sm text-emerald-100 mt-1">Canlı idarəetmə və nəzarət paneli</p>
 
             <!-- Hamburger Menu Button -->
             <button onclick="toggleHamburgerMenu()" class="absolute top-6 right-6 text-white p-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 transition flex items-center justify-center shadow-md">
@@ -76,39 +76,61 @@
             </div>
 
             <!-- Stats Overview -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-slate-50 p-5 rounded-2xl border shadow-sm">
-                    <p class="text-xs text-slate-500 font-semibold">Ümumi Çek Şəkli Sayı</p>
-                    <p class="text-2xl font-black text-slate-900 mt-1" id="totalReceipts">0</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="bg-slate-50 p-4 rounded-2xl border shadow-sm">
+                    <p class="text-[11px] text-slate-500 font-semibold">Çek Sayı</p>
+                    <p class="text-xl font-black text-slate-900 mt-1" id="totalReceipts">0</p>
                 </div>
-                <div class="bg-slate-50 p-5 rounded-2xl border shadow-sm">
-                    <p class="text-xs text-slate-500 font-semibold">Qeydiyyatda Olan İstifadəçilər</p>
-                    <p class="text-2xl font-black text-emerald-600 mt-1" id="totalUsers">0</p>
+                <div class="bg-slate-50 p-4 rounded-2xl border shadow-sm">
+                    <p class="text-[11px] text-slate-500 font-semibold">İştirakçılar</p>
+                    <p class="text-xl font-black text-emerald-600 mt-1" id="totalUsers">0</p>
                 </div>
-                <div class="bg-slate-50 p-5 rounded-2xl border shadow-sm">
-                    <p class="text-xs text-slate-500 font-semibold">Yığılan Ümumi Məbləğ</p>
-                    <p class="text-2xl font-black text-blue-600 mt-1" id="totalAmount">0 AZN</p>
+                <div class="bg-slate-50 p-4 rounded-2xl border shadow-sm">
+                    <p class="text-[11px] text-slate-500 font-semibold">Məbləğ</p>
+                    <p class="text-xl font-black text-blue-600 mt-1" id="totalAmount">0 AZN</p>
+                </div>
+            </div>
+
+            <!-- Leaderboard & Recent Activity Tabs -->
+            <div class="grid grid-cols-1 gap-4">
+                <!-- Top Donors -->
+                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-sm">
+                    <h3 class="font-bold text-amber-900 mb-3 flex items-center gap-2 text-sm">
+                        <span>🏆</span> Ən Aktiv Çek Bağışlayanlar
+                    </h3>
+                    <div id="leaderboardList" class="space-y-2 text-xs">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-teal-50 p-4 rounded-2xl border border-teal-200 shadow-sm">
+                    <h3 class="font-bold text-teal-900 mb-3 flex items-center gap-2 text-sm">
+                        <span>⚡</span> Son Göndərilən Çeklər
+                    </h3>
+                    <div id="recentList" class="space-y-2 text-xs">
+                        <!-- Loaded dynamically -->
+                    </div>
                 </div>
             </div>
 
             <!-- Receipts Table -->
             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-                <div class="p-5 border-b bg-slate-50 flex justify-between items-center">
-                    <h2 class="font-bold text-slate-800 text-sm">Göndərilən Çek Şəkilləri (Canlı Yenilənir)</h2>
+                <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
+                    <h2 class="font-bold text-slate-800 text-xs">📸 Göndərilən Çek Şəkilləri</h2>
                     <button onclick="clearAllReceipts()" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-200 transition">🗑️ Çekləri Təmizlə</button>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-[10px]">
                             <tr>
-                                <th class="p-3">Vaxt</th>
-                                <th class="p-3">İştirakçı</th>
-                                <th class="p-3">Kampaniya</th>
-                                <th class="p-3">Çek Şəkli</th>
-                                <th class="p-3">Məbləğ</th>
+                                <th class="p-2.5">Vaxt</th>
+                                <th class="p-2.5">İştirakçı</th>
+                                <th class="p-2.5">Çek Şəkli</th>
+                                <th class="p-2.5">Məbləğ</th>
                             </tr>
                         </thead>
-                        <tbody id="receiptsTableBody" class="divide-y divide-slate-200 text-xs">
+                        <tbody id="receiptsTableBody" class="divide-y divide-slate-200">
                             <!-- Dynamic rows -->
                         </tbody>
                     </table>
@@ -143,7 +165,7 @@
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                console.error("Config oxunmadı, fallback istifadə olunur:", API_BASE);
+                console.error("Config oxunmadı:", e);
             }
         }
 
@@ -201,34 +223,77 @@
                 let totalAmount = (data.campaigns || []).reduce((sum, c) => sum + c.current, 0);
                 document.getElementById('totalAmount').innerText = totalAmount + ' AZN';
 
+                // Leaderboard
+                const users = Object.entries(data.users || {})
+                    .map(([username, stats]) => ({ username, ...stats }))
+                    .sort((a, b) => b.points - a.points)
+                    .slice(0, 5);
+                const leaderboardEl = document.getElementById('leaderboardList');
+                leaderboardEl.innerHTML = '';
+                if (users.length === 0) {
+                    leaderboardEl.innerHTML = '<p class="text-amber-700 italic">Hələ iştirakçı yoxdur.</p>';
+                } else {
+                    users.forEach((u, index) => {
+                        let avatarHtml = `<div class="w-6 h-6 rounded-full bg-amber-200 text-amber-900 font-bold flex items-center justify-center text-[10px] shrink-0">${u.username.charAt(0).toUpperCase()}</div>`;
+                        if (u.avatarBase64) {
+                            avatarHtml = `<img src="${u.avatarBase64}" class="w-6 h-6 rounded-full object-cover shrink-0">`;
+                        }
+                        leaderboardEl.innerHTML += `
+                            <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-amber-100 shadow-xs">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-amber-900">${index + 1}.</span>
+                                    ${avatarHtml}
+                                    <span class="font-bold text-slate-800">${u.username}</span>
+                                </div>
+                                <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-md font-bold">${u.points} xal</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Recent Activity
+                const recentListEl = document.getElementById('recentList');
+                const recentReceipts = allReceipts.slice(-5).reverse();
+                recentListEl.innerHTML = '';
+                if (recentReceipts.length === 0) {
+                    recentListEl.innerHTML = '<p class="text-teal-700 italic">Hələ çek şəkli göndərilməyib.</p>';
+                } else {
+                    recentReceipts.forEach(r => {
+                        const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        recentListEl.innerHTML += `
+                            <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-teal-100 shadow-xs">
+                                <span class="font-medium text-teal-900">${r.username} (Çek göndərdi)</span>
+                                <span class="text-slate-400">${timeStr}</span>
+                            </div>
+                        `;
+                    });
+                }
+
                 // Table
                 const tbody = document.getElementById('receiptsTableBody');
                 tbody.innerHTML = '';
                 if (allReceipts.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Hələ heç bir çek şəkli göndərilməyib.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Hələ heç bir çek şəkli göndərilməyib.</td></tr>`;
                     return;
                 }
 
                 allReceipts.slice().reverse().forEach((r, idx) => {
                     const actualIndex = allReceipts.length - 1 - idx;
-                    const campaign = (data.campaigns || []).find(c => c.id === r.campaignId);
-                    const campaignTitle = campaign ? campaignTitleShort(campaign.title) : 'Naməlum';
-                    const timeStr = new Date(r.timestamp).toLocaleString();
+                    const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                     let receiptMedia = `<span class="text-xs text-slate-400 italic">Şəkil yoxdur</span>`;
                     if (r.imageBase64) {
-                        receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal(${actualIndex})" class="w-16 h-16 object-cover rounded-xl border bg-white p-1 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
+                        receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal(${actualIndex})" class="w-14 h-14 object-cover rounded-lg border bg-white p-0.5 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
                     }
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50">
-                            <td class="p-3 text-slate-500 whitespace-nowrap">${timeStr}</td>
-                            <td class="p-3 font-bold text-slate-800">${r.username}</td>
-                            <td class="p-3 text-slate-600">${campaignTitle}</td>
-                            <td class="p-3">
+                            <td class="p-2.5 text-slate-500 whitespace-nowrap">${timeStr}</td>
+                            <td class="p-2.5 font-bold text-slate-800">${r.username}</td>
+                            <td class="p-2.5">
                                 ${receiptMedia}
                             </td>
-                            <td class="p-3 font-bold text-emerald-600 whitespace-nowrap">+${r.amount} AZN</td>
+                            <td class="p-2.5 font-bold text-emerald-600 whitespace-nowrap">+${r.amount} AZN</td>
                         </tr>
                     `;
                 });
@@ -268,11 +333,6 @@
 
         function closeImageModal() {
             document.getElementById('imageModal').classList.add('hidden');
-        }
-
-        function campaignTitleShort(title) {
-            title = title || '';
-            return title.length > 25 ? title.substring(0, 25) + '...' : title;
         }
     </script>
 </body>
