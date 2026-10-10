@@ -39,6 +39,9 @@
                         Daxil olunmayıb
                     </div>
                     <div class="space-y-2 pt-2">
+                        <button onclick="toggleHamburgerMenu(); openManifestoModal()" class="w-full text-left bg-indigo-50 hover:bg-indigo-100 text-indigo-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
+                            <span>📜</span> Layihə Manifestosu və Məqsədlər
+                        </button>
                         <button onclick="toggleHamburgerMenu(); openProfileModal()" class="w-full text-left bg-emerald-50 hover:bg-emerald-100 text-emerald-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
                             <span>👤</span> Profil
                         </button>
@@ -58,6 +61,77 @@
                         <span>🚪</span> Çıxış
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Manifesto Modal -->
+        <div id="manifestoModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl flex flex-col h-[85vh] overflow-hidden p-6 space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                        <span>🌍</span> Layihə Manifestosu və Məqsədlər
+                    </h2>
+                    <button onclick="closeManifestoModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+                </div>
+                <div class="flex-1 overflow-y-auto space-y-4 text-xs text-slate-700 leading-relaxed pr-2">
+                    <h3 class="font-extrabold text-sm text-emerald-800">🌍 BİRLİKDƏ DAHA ÇOX YAXŞILIĞA!</h3>
+                    <p class="font-semibold text-slate-900">🐾 Təbiətə, heyvanlara və bütün canlılara dəstək olaq!</p>
+                    <p>Əziz iştirakçılar! 💚</p>
+                    <p>Layihəmizdə sizi yeni imkanlar, maraqlı tapşırıqlar və xeyirxah fəaliyyətlər gözləyir! Məqsədimiz yalnız yarışmaq deyil, həm də birlikdə təbiətimizi qorumaq, heyvanlara kömək etmək və daha çox canlıya həyat ümidi verməkdir.</p>
+
+                    <p class="font-bold text-slate-900 pt-2">🏆 HƏR İŞTİRAKÇI ÜÇÜN FƏALİYYƏTLƏR NƏZƏRDƏ TUTULUR!</p>
+                    <p>Layihəmiz çərçivəsində bütün iştirakçılar üçün müxtəlif sosial və ekoloji tapşırıqlar planlaşdırılır. Fəaliyyətlər ərazilər üzrə təşkil ediləcək və iştirak etmək istəyən şəxslər arasında xüsusi sorğular keçiriləcək.</p>
+
+                    <p class="font-bold text-slate-900 pt-2">📍 Ərazilər üzrə sorğular və iştirakçı seçimi</p>
+                    <p>Hansı şəhər və rayonlarda tədbirlərin keçiriləcəyini müəyyənləşdirmək üçün sorğular aparılacaq. İştirak etmək istəyən şəxslər müraciət edərək öz ərazilərində keçiriləcək fəaliyyətlərə qoşula biləcəklər. Seçilmiş iştirakçılar müvafiq ərazilərə yönləndiriləcək və tapşırıqlar barədə əvvəlcədən məlumatlandırılacaqlar.</p>
+
+                    <p class="font-bold text-slate-900 pt-2">🌳 Təbiət üçün görüləcək işlər</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Ağaclar üçün quş yuvalarının yerləşdirilməsi.</li>
+                        <li>Quşlar üçün yemlərin paylanması.</li>
+                        <li>Parkların və yaşıllıq ərazilərinin qorunması.</li>
+                        <li>Ətraf mühitin təmizliyi və yaşıllıqların artırılması.</li>
+                    </ul>
+
+                    <p class="font-bold text-slate-900 pt-2">🐕 Küçə heyvanlarına yardım</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Ehtiyacı olan it və pişiklərə yem və su dəstəyi.</li>
+                        <li>Heyvanlar üçün yardım aksiyalarının təşkili.</li>
+                        <li>Yaralı və köməyə ehtiyacı olan heyvanların müvafiq yardım xidmətlərinə çatdırılmasına dəstək.</li>
+                    </ul>
+
+                    <p class="font-bold text-slate-900 pt-2">🐦 Quşlara qayğı</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Quşların yemlənməsi üçün uyğun nöqtələrin yaradılması.</li>
+                        <li>Quş yuvalarının təhlükəsiz yerlərdə yerləşdirilməsi.</li>
+                        <li>Quşların qorunması barədə maarifləndirmə tədbirləri.</li>
+                    </ul>
+
+                    <p class="font-bold text-slate-900 pt-2">🐟 ÇAYLARA VƏ GÖLLƏRƏ HƏYAT VERƏK!</p>
+                    <p>Su canlılarını da unutmuruq! Layihə çərçivəsində mütəxəssislərin rəyi və müvafiq icazələr əsasında aşağıdakı fəaliyyətlərin həyata keçirilməsi planlaşdırılır:</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Balıqların alınaraq uyğun çaylara və göllərə buraxılması.</li>
+                        <li>Su hövzələrində balıqların yemlənməsi üçün təhlükəsiz tədbirlərin təşkili.</li>
+                        <li>Su hövzələrinin təmizliyinin və ekoloji tarazlığının qorunmasına dəstək.</li>
+                        <li>Su canlılarının mühafizəsi barədə maarifləndirmə.</li>
+                    </ul>
+
+                    <p class="font-bold text-slate-900 pt-2">💰 FONDDAN DƏSTƏK İMKANI</p>
+                    <p>Planlaşdırılan fəaliyyətlərin həyata keçirilməsi üçün layihə fondundan təsdiqlənmiş tapşırıqlara uyğun vəsait ayrılması nəzərdə tutulur. İştirakçılar ayrılmış vəsaiti müəyyən edilmiş məqsədlər üçün istifadə edəcək, görülən işləri foto və video ilə sənədləşdirəcəklər.</p>
+
+                    <p class="font-bold text-slate-900 pt-2">🥇 İLK 10-LUQDA OL, ƏLAVƏ İMKANLAR QAZAN!</p>
+                    <p>Yarışda ən aktiv iştirakçılar arasından ilk 10 nəfər seçilərək xüsusi tapşırıqlara və əlavə fəaliyyət imkanlarına cəlb oluna bilər. Bununla belə, layihənin əsas məqsədi yalnız ilk 10 nəfəri deyil, mümkün qədər çox iştirakçını faydalı işlərə cəlb etməkdir.</p>
+
+                    <p class="font-bold text-slate-900 pt-2">🔥 Yarışa davam et, aktivliyini artır və sorğuları izlə!</p>
+                    <p>Sənin yaşadığın ərazidə də bir yardım aksiyası keçirilə bilər. Bu dəfə ağaclara quş yuvası yerləşdirən, küçə heyvanlarına yem aparan, balıqların qorunmasına dəstək göstərən və ya təbiətin təmizliyinə töhfə verən sən ola bilərsən!</p>
+
+                    <p class="font-semibold text-slate-900 pt-2">💚 Unutma: kiçik bir addım böyük dəyişiklik yarada bilər.</p>
+                    <p>🐾 Heyvanlara ümid olaq.<br>🌳 Təbiətimizi qoruyaq.<br>🐦 Quşlara yuva yaradaq.<br>🐟 Su canlılarına qayğı göstərək.</p>
+
+                    <p class="font-extrabold text-emerald-800 pt-2 text-center">❤️ BİRLİKDƏ DAHA MƏRHƏMƏTLİ VƏ YAŞIL DÜNYA QURAQ!</p>
+                    <p class="italic text-center text-slate-500">Aktiv ol, təşəbbüs göstər və yaxşılığın bir parçasına çevril! 🌍</p>
+                </div>
+                <button onclick="closeManifestoModal()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition">Bağla</button>
             </div>
         </div>
 
@@ -375,6 +449,14 @@
 
         function closeLeaderboardModal() {
             document.getElementById('leaderboardModal').classList.add('hidden');
+        }
+
+        function openManifestoModal() {
+            document.getElementById('manifestoModal').classList.remove('hidden');
+        }
+
+        function closeManifestoModal() {
+            document.getElementById('manifestoModal').classList.add('hidden');
         }
 
         async function fetchFullLeaderboard() {
@@ -867,7 +949,7 @@
                     }
 
                     listEl.innerHTML += `
-                        <div onclick="startChatWith('${u.username}')" class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-500 cursor-pointer shadow-xs transition">
+                        <div onclick="startChatWith('${u.username}')" class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 hover:border-emerald-500 cursor-pointer shadow-xs transition">
                             <div class="flex items-center gap-3">
                                 ${avatarHtml}
                                 <span class="font-bold text-slate-800 text-sm">${u.username}</span>
