@@ -225,7 +225,7 @@
                         <button onclick="addEmojiToModalInput('🔥')" class="p-1 hover:bg-slate-100 rounded">🔥</button>
                     </div>
                     <div class="flex gap-2">
-                        <input type="text" id="modalCommentInput" placeholder="Rəy yazın..." onkeydown="if(event.key === 'Enter') submitModalComment()" class="flex-1 p-2.5 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                        <input type="text" id="modalCommentInput" placeholder="Rəy yazın..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); submitModalComment(); }" class="flex-1 p-2.5 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 bg-slate-50">
                         <button onclick="submitModalComment()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-700">Göndər</button>
                     </div>
                 </div>
@@ -286,7 +286,7 @@
                         <!-- Messages loaded dynamically -->
                     </div>
                     <div class="p-3 bg-white border-t flex gap-2">
-                        <input type="text" id="chatMessageInput" placeholder="Mesaj yazın..." onkeydown="if(event.key === 'Enter') sendPrivateMessage()" class="flex-1 p-2.5 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="chatMessageInput" placeholder="Mesaj yazın..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); sendPrivateMessage(); }" class="flex-1 p-2.5 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500">
                         <button onclick="sendPrivateMessage()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-700">Göndər</button>
                     </div>
                 </div>
@@ -850,12 +850,11 @@
                 const data = await res.json();
                 const badge = document.getElementById('msgNotificationBadge');
 
-                if (lastKnownMsgCount > 0 && data.count > lastKnownMsgCount) {
+                if (data.count > 0) {
                     badge.classList.remove('hidden');
-                } else if (lastKnownMsgCount === 0 && data.count > 0) {
-                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
                 }
-                lastKnownMsgCount = data.count;
             } catch (e) {
                 console.error(e);
             }
@@ -1002,9 +1001,24 @@
             document.getElementById('chatBackBtn').classList.remove('hidden');
             document.getElementById('chatTitleUsername').innerText = `💬 ${username} ilə söhbət`;
 
+            markMessagesAsRead(username);
             fetchMessages();
             if (chatInterval) clearInterval(chatInterval);
             chatInterval = setInterval(fetchMessages, 4000);
+        }
+
+        async function markMessagesAsRead(senderUsername) {
+            if (!currentUser || !senderUsername) return;
+            try {
+                await fetch(API_BASE + '/api/messages/mark-read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reader: currentUser, sender: senderUsername })
+                });
+                checkUnreadMessages();
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         async function fetchMessages() {
@@ -1069,7 +1083,7 @@
                     alert('Xəta: ' + data.message);
                 }
             } catch (e) {
-                alert('Mesaj göndərilərkən xəta baş verdi.');
+                alert('Mesaj göndərərkən xəta baş verdi.');
             }
         }
 
