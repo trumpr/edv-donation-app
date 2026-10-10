@@ -833,7 +833,7 @@
         async function toggleLike(postId) {
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             try {
-                const res = await fetch(API_BASE + '/api/posts/${postId}/like', {
+                const res = await fetch(API_BASE + `/api/posts/${postId}/like`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: currentUser })
@@ -1061,7 +1061,15 @@
                     const bubbleAlign = isMe ? 'ml-auto bg-[#005c4b] text-white rounded-2xl rounded-tr-xs' : 'mr-auto bg-white text-slate-900 border border-slate-200 rounded-2xl rounded-tl-xs';
                     const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const senderLabel = !isMe ? `<div class="font-extrabold text-[11px] text-[#00a884] mb-1">${escapeHtml(m.sender)}</div>` : '';
-                    const blueTicks = isMe ? `<span class="text-sky-400 font-extrabold ml-1 tracking-tighter" title="Oxundu">✓✓</span>` : '';
+
+                    let ticks = '';
+                    if (isMe) {
+                        if (m.read) {
+                            ticks = `<span class="text-sky-400 font-extrabold ml-1 tracking-tighter" title="Oxundu">✓✓</span>`;
+                        } else {
+                            ticks = `<span class="text-slate-400 font-extrabold ml-1 tracking-tighter" title="Çatdırıldı">✓</span>`;
+                        }
+                    }
 
                     listEl.innerHTML += `
                         <div class="max-w-[85%] ${bubbleAlign} p-3 text-xs space-y-1 shadow-sm">
@@ -1069,7 +1077,7 @@
                             <p class="whitespace-pre-line leading-relaxed">${escapeHtml(m.text)}</p>
                             <div class="flex items-center justify-end gap-1 pt-0.5">
                                 <span class="text-[9px] ${isMe ? 'text-emerald-200' : 'text-slate-400'}">${timeStr}</span>
-                                ${blueTicks}
+                                ${ticks}
                             </div>
                         </div>
                     `;
@@ -1284,7 +1292,7 @@
                 const res = await fetch(API_BASE + '/api/recent');
                 const recent = await res.json();
                 const listEl = document.getElementById('recentList');
-                listEl.innerHTML = ``;
+                listEl.innerHTML = '';
                 if (recent.length === 0) {
                     listEl.innerHTML = '<p class="text-teal-700 italic">Hələ çek şəkli göndərilməyib.</p>';
                     return;
