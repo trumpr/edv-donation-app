@@ -237,12 +237,13 @@
                 </div>
             </div>
 
-            <!-- Receipt Photo Upload Button Section -->
-            <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <!-- Receipt QR Upload Button Section (with small qr.jpeg) -->
+            <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center space-y-2">
                 <input type="file" id="receiptPhotoInput" accept="image/*" capture="environment" class="hidden" onchange="uploadReceiptPhoto(event)">
-                <button onclick="triggerPhotoCapture()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-bold transition flex items-center justify-center gap-3 shadow-lg text-lg">
-                    <span>📸</span> ƏDV Yüklə
-                </button>
+                <div onclick="triggerPhotoCapture()" class="cursor-pointer group flex flex-col items-center">
+                    <img src="./qr.jpeg" alt="QR Yüklə" class="w-16 h-16 object-cover rounded-xl border-2 border-emerald-500 shadow-md group-hover:scale-105 transition transform">
+                    <span class="text-xs font-bold text-slate-700 mt-1.5">Çek QR-nı Yüklə / Skan Et</span>
+                </div>
             </div>
 
             <!-- Admin Posts & Social Feed Section -->
