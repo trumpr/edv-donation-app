@@ -25,15 +25,6 @@
             <img src="./banner.png" alt="Bir kliklə yaxşılıq et!" class="w-full h-auto object-cover max-h-80">
         </div>
 
-        <!-- Receipt QR Upload Button Section (Right below banner image) -->
-        <div class="p-4 bg-white border-b flex items-center justify-center animate-pulse">
-            <input type="file" id="receiptPhotoInput" accept="image/*" capture="environment" class="hidden" onchange="uploadReceiptPhoto(event)">
-            <div onclick="triggerPhotoCapture()" class="cursor-pointer group flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 rounded-2xl shadow-xl hover:from-emerald-700 hover:to-teal-700 transition transform hover:scale-105 border-2 border-emerald-400 w-full justify-center max-w-sm">
-                <img src="./qr.jpeg" alt="QR Yüklə" class="w-10 h-10 object-cover rounded-xl border-2 border-white shadow-md">
-                <span class="text-sm font-extrabold text-white tracking-wide">ƏDV Çək</span>
-            </div>
-        </div>
-
         <!-- Hamburger Slide-over Menu -->
         <div id="hamburgerMenuModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-end" onclick="toggleHamburgerMenu()">
             <div class="bg-white w-72 h-full shadow-2xl p-6 flex flex-col justify-between space-y-6" onclick="event.stopPropagation()">
@@ -1001,15 +992,19 @@
 
                 messages.forEach(m => {
                     const isMe = m.sender.toLowerCase() === currentUser.toLowerCase();
-                    const bubbleAlign = isMe ? 'ml-auto bg-emerald-600 text-white rounded-br-none' : 'mr-auto bg-white text-slate-800 border rounded-bl-none';
+                    const bubbleAlign = isMe ? 'ml-auto bg-emerald-600 text-white rounded-2xl rounded-tr-xs' : 'mr-auto bg-white text-slate-800 border rounded-2xl rounded-tl-xs';
                     const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const senderLabel = !isMe ? `<p class="font-bold text-[10px] text-emerald-800 mb-0.5">${m.sender}</p>` : '';
+                    const senderLabel = !isMe ? `<p class="font-bold text-[10px] text-emerald-700 mb-1">${escapeHtml(m.sender)}</p>` : '';
+                    const blueTicks = isMe ? `<span class="text-blue-300 font-extrabold ml-1 tracking-tighter" title="Oxundu">✓✓</span>` : '';
 
                     listEl.innerHTML += `
-                        <div class="max-w-[75%] ${bubbleAlign} p-3 rounded-2xl text-xs space-y-1 shadow-xs">
+                        <div class="max-w-[80%] ${bubbleAlign} p-3 text-xs space-y-1 shadow-sm">
                             ${senderLabel}
-                            <p class="whitespace-pre-line">${escapeHtml(m.text)}</p>
-                            <p class="text-[9px] text-right ${isMe ? 'text-emerald-200' : 'text-slate-400'}">${timeStr}</p>
+                            <p class="whitespace-pre-line leading-relaxed">${escapeHtml(m.text)}</p>
+                            <div class="flex items-center justify-end gap-1 pt-0.5">
+                                <span class="text-[9px] ${isMe ? 'text-emerald-200' : 'text-slate-400'}">${timeStr}</span>
+                                ${blueTicks}
+                            </div>
                         </div>
                     `;
                 });
