@@ -35,7 +35,8 @@ app.post('/api/login', (req, res) => {
             hearts: 0,
             age: '',
             region: '',
-            avatarBase64: ''
+            avatarBase64: '',
+            blockedUsers: []
         };
         storage.saveUsers();
         return res.json({ success: true, message: 'Qeydiyyat uğurla tamamlandı!', user: storage.data.users[u] });
@@ -51,11 +52,14 @@ app.post('/api/login', (req, res) => {
         storage.saveUsers();
     }
 
-    // Ensure hearts property exists for older users
+    // Ensure properties exist for older users
     if (storage.data.users[u].hearts === undefined) {
         storage.data.users[u].hearts = storage.data.users[u].donationsCount || 0;
-        storage.saveUsers();
     }
+    if (!storage.data.users[u].blockedUsers) {
+        storage.data.users[u].blockedUsers = [];
+    }
+    storage.saveUsers();
 
     res.json({ success: true, message: 'Uğurla daxil oldunuz!', user: storage.data.users[u] });
 });
@@ -90,7 +94,7 @@ app.post('/api/donate', (req, res) => {
 
     // Update user stats
     if (!storage.data.users[u]) {
-        storage.data.users[u] = { pin: '0000', donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '' };
+        storage.data.users[u] = { pin: '0000', donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '', blockedUsers: [] };
     }
     storage.data.users[u].donationsCount += 1;
     storage.data.users[u].points += 10; // 10 points per receipt photo
@@ -114,7 +118,7 @@ app.post('/api/profile', (req, res) => {
 
     const u = username.trim();
     if (!storage.data.users[u]) {
-        storage.data.users[u] = { pin: '0000', donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '' };
+        storage.data.users[u] = { pin: '0000', donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '', blockedUsers: [] };
     }
 
     storage.data.users[u].age = age || '';
@@ -145,8 +149,9 @@ app.post('/api/profile', (req, res) => {
 // API: Get user stats & profile
 app.get('/api/user/:username', (req, res) => {
     const username = req.params.username.trim();
-    const user = storage.data.users[username] || { donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '' };
+    const user = storage.data.users[username] || { donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '', blockedUsers: [] };
     if (user.hearts === undefined) user.hearts = user.donationsCount || 0;
+    if (!user.blockedUsers) user.blockedUsers = [];
     res.json(user);
 });
 
@@ -280,7 +285,32 @@ app.post('/api/messages/delete-chat', (req, res) => {
     res.json({ success: true, message: 'Söhbət silindi.' });
 });
 
-// API: Send private message (spends 1 Heart 💚, allows full length message text with paragraphs/sentences)
+// API: Block / Unblock user
+app.post('/api/messages/block', (req, res) => {
+    const { blocker, target } = req.body;
+    if (!blocker || !target) return res.status(400).json({ success: false, message: 'İştirakçılar tələb olunur.' });
+
+    const b = blocker.trim();
+    const t = target.trim().toLowerCase();
+
+    if (!storage.data.users[b]) return res.status(404).json({ success: false, message: 'İstifadəçi tapılmadı.' });
+    if (!storage.data.users[b].blockedUsers) storage.data.users[b].blockedUsers = [];
+
+    const index = storage.data.users[b].blockedUsers.indexOf(t);
+    let isBlocked = false;
+    if (index > -1) {
+        storage.data.users[b].blockedUsers.splice(index, 1);
+        isBlocked = false;
+    } else {
+        storage.data.users[b].blockedUsers.push(t);
+        isBlocked = true;
+    }
+    storage.saveUsers();
+
+    res.json({ success: true, isBlocked, message: isBlocked ? 'İstifadəçi bloklandı.' : 'İstifadəçi blokdan çıxarıldı.' });
+});
+
+// API: Send private message (spends 1 Heart 💚, checks blocking status)
 app.post('/api/messages', (req, res) => {
     const { sender, receiver, text } = req.body;
     if (!sender || !receiver || !text || !text.trim()) {
@@ -288,26 +318,39 @@ app.post('/api/messages', (req, res) => {
     }
 
     const s = sender.trim();
-    const userObj = storage.data.users[s];
-    if (!userObj) {
+    const r = receiver.trim();
+    const senderObj = storage.data.users[s];
+    const receiverObj = storage.data.users[r];
+
+    if (!senderObj) {
         return res.status(400).json({ success: false, message: 'İstifadəçi tapılmadı.' });
     }
 
-    if ((userObj.hearts || 0) <= 0) {
+    // Check if receiver blocked sender
+    if (receiverObj && receiverObj.blockedUsers && receiverObj.blockedUsers.includes(s.toLowerCase())) {
+        return res.status(400).json({ success: false, message: 'Bu istifadəçi sizi bloklayıb, mesaj göndərə bilməzsiniz.' });
+    }
+
+    // Check if sender blocked receiver
+    if (senderObj && senderObj.blockedUsers && senderObj.blockedUsers.includes(r.toLowerCase())) {
+        return res.status(400).json({ success: false, message: 'Siz bu istifadəçini bloklamısınız. Mesaj göndərmək üçün əvvəlcə blokdan çıxarın.' });
+    }
+
+    if ((senderObj.hearts || 0) <= 0) {
         return res.status(400).json({
             success: false,
-            message: 'Mesaj göndərmək üçün balansınızda Ürək 💚 yoxdur! İstədiyiniz uzunluqda mesaj yaza bilmək üçün yeni ƏDV çeki yükləyərək 1 Ürək qazanın 💚'
+            message: 'Mesaj göndərmək üçün balansınızda Ürək 💚 yoxdur! Yeni ƏDV çeki yükləyərək 1 Ürək qazanın 💚'
         });
     }
 
     // Deduct 1 Heart for this message
-    userObj.hearts -= 1;
+    senderObj.hearts -= 1;
     storage.saveUsers();
 
     const newMessage = {
         id: Date.now().toString(),
         sender: s,
-        receiver: receiver.trim(),
+        receiver: r,
         text: text.trim(),
         read: false,
         timestamp: new Date().toISOString()
@@ -316,7 +359,7 @@ app.post('/api/messages', (req, res) => {
     storage.data.messages.push(newMessage);
     storage.saveMessages();
 
-    res.json({ success: true, message: 'Mesaj göndərildi (1 Ürək 💚 xərcləndi).', messageObj: newMessage, user: userObj });
+    res.json({ success: true, message: 'Mesaj göndərildi (1 Ürək 💚 xərcləndi).', messageObj: newMessage, user: senderObj });
 });
 
 // --- ADMIN POSTS & SOCIAL FEED APIS ---

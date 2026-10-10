@@ -271,10 +271,11 @@
                         </div>
                         <div>
                             <span id="chatTitleUsername" class="font-bold text-sm block">Şəxsi Çat</span>
-                            <span class="text-[10px] text-emerald-100 block">online</span>
+                            <span id="chatStatusSubtitle" class="text-[10px] text-emerald-100 block">online</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
+                        <button id="blockChatBtn" onclick="toggleBlockUser()" class="hidden text-white hover:opacity-80 text-base font-bold" title="İstifadəçini blokla">🚫</button>
                         <button id="deleteChatBtn" onclick="deleteActiveChat()" class="hidden text-white hover:opacity-80 text-base font-bold" title="Söhbəti təmizlə">🗑️</button>
                         <button onclick="closeChatModal()" class="text-white hover:opacity-80 font-bold text-lg">✕</button>
                     </div>
@@ -1021,9 +1022,12 @@
             document.getElementById('activeChatView').classList.add('hidden');
             document.getElementById('chatBackBtn').classList.add('hidden');
             document.getElementById('deleteChatBtn').classList.add('hidden');
+            document.getElementById('blockChatBtn').classList.add('hidden');
             document.getElementById('chatTitleUsername').innerText = "Şəxsi Çat";
             const avatarHeader = document.getElementById('chatHeaderAvatar');
             if (avatarHeader) avatarHeader.innerText = "💬";
+            const subtitle = document.getElementById('chatStatusSubtitle');
+            if (subtitle) subtitle.innerText = "online";
             activeChatUser = null;
         }
 
@@ -1033,6 +1037,7 @@
             document.getElementById('activeChatView').classList.remove('hidden');
             document.getElementById('chatBackBtn').classList.remove('hidden');
             document.getElementById('deleteChatBtn').classList.remove('hidden');
+            document.getElementById('blockChatBtn').classList.remove('hidden');
             document.getElementById('chatTitleUsername').innerText = username;
 
             // Remove from hiddenChats if they start chatting again
@@ -1053,6 +1058,7 @@
             }
 
             markMessagesAsRead(username);
+            checkBlockStatus();
             fetchMessages();
             if (chatInterval) clearInterval(chatInterval);
             chatInterval = setInterval(fetchMessages, 4000);
@@ -1069,6 +1075,52 @@
                 checkUnreadMessages();
             } catch (e) {
                 console.error(e);
+            }
+        }
+
+        async function checkBlockStatus() {
+            if (!currentUser || !activeChatUser) return;
+            try {
+                const res = await fetch(API_BASE + `/api/user/${currentUser}`);
+                const data = await res.json();
+                const blocked = data.blockedUsers && data.blockedUsers.includes(activeChatUser.toLowerCase());
+                const blockBtn = document.getElementById('blockChatBtn');
+                const subtitle = document.getElementById('chatStatusSubtitle');
+
+                if (blocked) {
+                    if (blockBtn) blockBtn.innerText = '🟢';
+                    if (blockBtn) blockBtn.title = 'Blokdan çıxar';
+                    if (subtitle) subtitle.innerText = 'Bloklanıb 🚫';
+                } else {
+                    if (blockBtn) blockBtn.innerText = '🚫';
+                    if (blockBtn) blockBtn.title = 'İstifadəçini blokla';
+                    if (subtitle) subtitle.innerText = 'online';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function toggleBlockUser() {
+            if (!currentUser || !activeChatUser) return;
+            const confirmMsg = `"${activeChatUser}" adlı istifadəçini bloklamaq/blokdan çıxarmaq istədiyinizə əminsiniz?`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/messages/block', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ blocker: currentUser, target: activeChatUser })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    checkBlockStatus();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('Bloklanarkən xəta baş verdi.');
             }
         }
 
