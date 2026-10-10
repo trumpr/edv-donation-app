@@ -204,40 +204,33 @@
 
         <!-- Main Content -->
         <main class="p-5 flex-1 space-y-6">
-            <!-- User Login / Profile Section -->
-            <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 shadow-sm">
-                <div id="loginSection" class="space-y-3">
-                    <h3 class="font-bold text-emerald-900 text-sm">🔑 Giriş və ya Qeydiyyat</h3>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1 text-emerald-900">İştirakçı Adı:</label>
-                        <input type="text" id="usernameInput" placeholder="Məsələn: elnur123" class="w-full p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1 text-emerald-900">4-rəqəmli PIN (Parol):</label>
-                        <input type="password" id="pinInput" maxlength="4" placeholder="••••" onkeydown="if(event.key === 'Enter') loginUser()" class="w-full p-3 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white tracking-widest text-center text-lg font-bold">
-                    </div>
-                    <button onclick="loginUser()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow">Daxil ol / Qeydiyyat</button>
+            <!-- Slim Top User Bar -->
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                <div id="loginSection" class="flex items-center gap-2 w-full">
+                    <input type="text" id="usernameInput" placeholder="İştirakçı adı..." class="flex-1 p-2 border rounded-xl text-xs bg-white focus:ring-2 focus:ring-emerald-500">
+                    <input type="password" id="pinInput" maxlength="4" placeholder="PIN" onkeydown="if(event.key === 'Enter') loginUser()" class="w-16 p-2 border rounded-xl text-xs bg-white text-center font-bold tracking-widest">
+                    <button onclick="loginUser()" class="bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 whitespace-nowrap shadow">Daxil ol</button>
                 </div>
 
-                <div id="profileSection" class="hidden flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <div id="headerAvatar" class="w-10 h-10 rounded-full border border-emerald-400 overflow-hidden bg-emerald-100 flex items-center justify-center font-bold text-emerald-800 shrink-0 shadow-inner">
-                            <!-- Initials or Avatar -->
+                <div id="profileSection" class="hidden flex items-center justify-between w-full">
+                    <div class="flex items-center gap-2">
+                        <div id="headerAvatar" class="w-8 h-8 rounded-full border border-emerald-400 overflow-hidden bg-emerald-100 flex items-center justify-center font-bold text-emerald-800 text-xs shrink-0 shadow-inner">
+                            ?
                         </div>
                         <div>
-                            <p class="font-bold text-emerald-900" id="displayUsername"></p>
-                            <p class="text-xs text-emerald-700">Xallar: <span id="userPoints">0</span> | Çeklər: <span id="userDonations">0</span></p>
+                            <p class="font-bold text-emerald-900 text-xs" id="displayUsername"></p>
+                            <p class="text-[10px] text-emerald-700">Xallar: <span id="userPoints">0</span> | Çeklər: <span id="userDonations">0</span></p>
                         </div>
                     </div>
-                    <div class="flex gap-1.5 flex-wrap">
-                        <button onclick="openChatModal()" class="relative bg-blue-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-700 shadow">
+                    <div class="flex gap-1.5">
+                        <button onclick="openChatModal()" class="relative bg-blue-600 text-white px-3 py-1.5 rounded-xl text-[11px] font-bold hover:bg-blue-700 shadow">
                             📩 Mesajlar <span id="msgNotificationBadge" class="hidden absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Catchy & Pulsing Receipt QR Upload Button Section -->
+            <!-- Receipt QR Upload Button Section (with small qr.jpeg) -->
             <div class="p-2 rounded-2xl flex items-center justify-center animate-pulse">
                 <input type="file" id="receiptPhotoInput" accept="image/*" capture="environment" class="hidden" onchange="uploadReceiptPhoto(event)">
                 <div onclick="triggerPhotoCapture()" class="cursor-pointer group flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 rounded-2xl shadow-xl hover:from-emerald-700 hover:to-teal-700 transition transform hover:scale-105 border-2 border-emerald-400">
