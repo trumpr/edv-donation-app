@@ -30,7 +30,7 @@
             <input type="file" id="receiptPhotoInput" accept="image/*" capture="environment" class="hidden" onchange="uploadReceiptPhoto(event)">
             <div onclick="triggerPhotoCapture()" class="cursor-pointer group flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 rounded-2xl shadow-xl hover:from-emerald-700 hover:to-teal-700 transition transform hover:scale-105 border-2 border-emerald-400 w-full justify-center max-w-sm">
                 <img src="./qr.jpeg" alt="QR Yüklə" class="w-10 h-10 object-cover rounded-xl border-2 border-white shadow-md">
-                <span class="text-sm font-extrabold text-white tracking-wide">ƏDV Çək</span>
+                <span class="text-sm font-extrabold text-white tracking-wide">ƏDV Çək (1 Ürək Qazan 💚)</span>
             </div>
         </div>
 
@@ -334,7 +334,7 @@
                         </div>
                         <div>
                             <p class="font-bold text-emerald-900 text-xs" id="displayUsername"></p>
-                            <p class="text-[10px] text-emerald-700">Xallar: <span id="userPoints">0</span> | Çeklər: <span id="userDonations">0</span></p>
+                            <p class="text-[10px] text-emerald-700">Xal: <span id="userPoints">0</span> | Çek: <span id="userDonations">0</span> | Ürək: <span id="userHearts" class="font-bold text-emerald-900">0 💚</span></p>
                         </div>
                     </div>
                     <div class="flex gap-1.5">
@@ -489,7 +489,7 @@
 
             if (myRank !== -1) {
                 rankBanner.classList.remove('hidden');
-                rankBanner.innerHTML = `<span>🎯 Sizin Reytinq Yeriniz: <b>#${myRank + 1}</b> (${users[myRank].points} xal)</span>`;
+                rankBanner.innerHTML = `<span>🎯 Sizin Reytinq Yeriniz: <b>#${myRank + 1}</b> (${users[myRank].points} xal, ${users[myRank].hearts || 0} 💚)</span>`;
             } else {
                 rankBanner.classList.add('hidden');
             }
@@ -520,7 +520,7 @@
                             ${avatarHtml}
                             <div>
                                 <p class="font-bold text-slate-800 text-xs">${u.username}${isMe ? ' (Siz)' : ''}<span class="text-[10px] text-slate-500 font-normal">${detailsStr}</span></p>
-                                <p class="text-[10px] text-amber-700 font-semibold">${u.donationsCount || 0} çek</p>
+                                <p class="text-[10px] text-amber-700 font-semibold">${u.donationsCount || 0} çek | ${u.hearts || 0} 💚</p>
                             </div>
                         </div>
                         <span class="bg-amber-200 text-amber-900 px-2.5 py-1 rounded-lg text-xs font-bold">${u.points} xal</span>
@@ -810,6 +810,7 @@
                 if (data.success) {
                     input.value = '';
                     fetchPosts();
+                    fetchUserStats();
                 } else {
                     alert('Xəta: ' + data.message);
                 }
@@ -907,7 +908,7 @@
                             ${avatarHtml}
                             <div>
                                 <p class="font-bold text-slate-800 text-xs">${u.username}<span class="text-[10px] text-slate-500 font-normal">${detailsStr}</span></p>
-                                <p class="text-[10px] text-emerald-700 font-semibold">${u.points || 0} xal</p>
+                                <p class="text-[10px] text-emerald-700 font-semibold">${u.points || 0} xal | ${u.hearts || 0} 💚</p>
                             </div>
                         </div>
                         <button onclick="openChatWithUser('${u.username}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow">💬 Mesaj yaz</button>
@@ -1043,6 +1044,7 @@
                 if (data.success) {
                     textInput.value = '';
                     fetchMessages();
+                    fetchUserStats();
                 } else {
                     alert('Xəta: ' + data.message);
                 }
@@ -1163,6 +1165,8 @@
                 const data = await res.json();
                 document.getElementById('userPoints').innerText = data.points || 0;
                 document.getElementById('userDonations').innerText = data.donationsCount || 0;
+                const heartsEl = document.getElementById('userHearts');
+                if (heartsEl) heartsEl.innerText = (data.hearts !== undefined ? data.hearts : data.donationsCount || 0) + ' 💚';
 
                 const avatarEl = document.getElementById('headerAvatar');
                 if (data.avatarBase64) {

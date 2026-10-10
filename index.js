@@ -32,6 +32,7 @@ app.post('/api/login', (req, res) => {
             pin: pin,
             donationsCount: 0,
             points: 0,
+            hearts: 0,
             age: '',
             region: '',
             avatarBase64: ''
@@ -50,10 +51,16 @@ app.post('/api/login', (req, res) => {
         storage.saveUsers();
     }
 
+    // Ensure hearts property exists for older users
+    if (storage.data.users[u].hearts === undefined) {
+        storage.data.users[u].hearts = storage.data.users[u].donationsCount || 0;
+        storage.saveUsers();
+    }
+
     res.json({ success: true, message: 'Uğurla daxil oldunuz!', user: storage.data.users[u] });
 });
 
-// API: Submit receipt photo
+// API: Submit receipt photo (1 receipt = 1 Heart 💚 earned)
 app.post('/api/donate', (req, res) => {
     const { username, campaignId, qrData, imageBase64 } = req.body;
 
@@ -61,9 +68,10 @@ app.post('/api/donate', (req, res) => {
         return res.status(400).json({ success: false, message: 'İstifadəçi adı tələb olunur.' });
     }
 
+    const u = username.trim();
     const receiptEntry = {
         id: Date.now().toString(),
-        username: username.trim(),
+        username: u,
         campaignId: campaignId || '1',
         qrData: qrData || 'Çek Şəkli',
         imageBase64: imageBase64 || null,
@@ -81,17 +89,18 @@ app.post('/api/donate', (req, res) => {
     }
 
     // Update user stats
-    if (!storage.data.users[username]) {
-        storage.data.users[username] = { pin: '0000', donationsCount: 0, points: 0, age: '', region: '', avatarBase64: '' };
+    if (!storage.data.users[u]) {
+        storage.data.users[u] = { pin: '0000', donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '' };
     }
-    storage.data.users[username].donationsCount += 1;
-    storage.data.users[username].points += 10; // 10 points per receipt photo
+    storage.data.users[u].donationsCount += 1;
+    storage.data.users[u].points += 10; // 10 points per receipt photo
+    storage.data.users[u].hearts = (storage.data.users[u].hearts || 0) + 1; // Earns 1 Heart!
     storage.saveUsers();
 
     res.json({
         success: true,
-        message: 'Təşəkkürlər! Çek şəkliniz uğurla qeydə alındı. Artıq mesaj və rəy yazmaq üçün 1 çek haqqı qazandınız! 💚',
-        user: storage.data.users[username],
+        message: 'Təşəkkürlər! Çek şəkliniz qeydə alındı və balansınıza 1 Ürək 💚 əlavə olundu!',
+        user: storage.data.users[u],
         campaign
     });
 });
@@ -105,7 +114,7 @@ app.post('/api/profile', (req, res) => {
 
     const u = username.trim();
     if (!storage.data.users[u]) {
-        storage.data.users[u] = { pin: '0000', donationsCount: 0, points: 0, age: '', region: '', avatarBase64: '' };
+        storage.data.users[u] = { pin: '0000', donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '' };
     }
 
     storage.data.users[u].age = age || '';
@@ -136,7 +145,8 @@ app.post('/api/profile', (req, res) => {
 // API: Get user stats & profile
 app.get('/api/user/:username', (req, res) => {
     const username = req.params.username.trim();
-    const user = storage.data.users[username] || { donationsCount: 0, points: 0, age: '', region: '', avatarBase64: '' };
+    const user = storage.data.users[username] || { donationsCount: 0, points: 0, hearts: 0, age: '', region: '', avatarBase64: '' };
+    if (user.hearts === undefined) user.hearts = user.donationsCount || 0;
     res.json(user);
 });
 
@@ -149,7 +159,7 @@ app.get('/api/recent', (req, res) => {
 // API: Get leaderboard
 app.get('/api/leaderboard', (req, res) => {
     const users = Object.entries(storage.data.users)
-        .map(([username, stats]) => ({ username, ...stats }))
+        .map(([username, stats]) => ({ username, hearts: stats.hearts || 0, ...stats }))
         .sort((a, b) => b.points - a.points);
     res.json(users);
 });
@@ -159,7 +169,7 @@ app.get('/api/comments', (req, res) => {
     res.json(storage.data.comments);
 });
 
-// API: Post a comment
+// API: Post a comment (spends 1 Heart 💚)
 app.post('/api/comments', (req, res) => {
     const { username, text, replyTo, replyToAvatar } = req.body;
     if (!username || !text || !text.trim()) {
@@ -167,17 +177,21 @@ app.post('/api/comments', (req, res) => {
     }
 
     const u = username.trim();
-    const userObj = storage.data.users[u] || {};
-    const donationsCount = userObj.donationsCount || 0;
+    const userObj = storage.data.users[u];
+    if (!userObj) {
+        return res.status(400).json({ success: false, message: 'İstifadəçi tapılmadı.' });
+    }
 
-    // Check receipt quota (1 receipt = 1 message/comment quota)
-    const userCommentsCount = storage.data.comments.filter(c => c.username.toLowerCase() === u.toLowerCase()).length;
-    if (donationsCount <= 0 || userCommentsCount >= donationsCount) {
+    if ((userObj.hearts || 0) <= 0) {
         return res.status(400).json({
             success: false,
-            message: `Rəy yazmaq üçün əvvəlcə ƏDV çeki bağışlamalısınız! Hər 1 çek = 1 rəy haqqı verir. (Bağışladığınız çek sayı: ${donationsCount}, yazdığınız rəy sayı: ${userCommentsCount}) 💚`
+            message: 'Rəy yazmaq üçün balansınızda Ürək 💚 yoxdur! Yeni ƏDV çeki yükləyərək ürək qazanın.'
         });
     }
+
+    // Deduct 1 Heart
+    userObj.hearts -= 1;
+    storage.saveUsers();
 
     const newComment = {
         id: Date.now().toString(),
@@ -192,7 +206,7 @@ app.post('/api/comments', (req, res) => {
     storage.data.comments.push(newComment);
     storage.saveComments();
 
-    res.json({ success: true, message: 'Komment əlavə olundu.', comment: newComment });
+    res.json({ success: true, message: 'Komment əlavə olundu (1 Ürək 💚 xərcləndi).', comment: newComment, user: userObj });
 });
 
 // API: Get private messages between two users
@@ -221,7 +235,7 @@ app.get('/api/unread', (req, res) => {
     res.json({ count: incoming.length, messages: incoming });
 });
 
-// API: Send private message (1 receipt = 1 message quota)
+// API: Send private message (spends 1 Heart 💚)
 app.post('/api/messages', (req, res) => {
     const { sender, receiver, text } = req.body;
     if (!sender || !receiver || !text || !text.trim()) {
@@ -229,17 +243,21 @@ app.post('/api/messages', (req, res) => {
     }
 
     const s = sender.trim();
-    const userObj = storage.data.users[s] || {};
-    const donationsCount = userObj.donationsCount || 0;
+    const userObj = storage.data.users[s];
+    if (!userObj) {
+        return res.status(400).json({ success: false, message: 'İstifadəçi tapılmadı.' });
+    }
 
-    // Check receipt quota (1 receipt = 1 message quota)
-    const userSentMessagesCount = storage.data.messages.filter(m => m.sender.toLowerCase() === s.toLowerCase()).length;
-    if (donationsCount <= 0 || userSentMessagesCount >= donationsCount) {
+    if ((userObj.hearts || 0) <= 0) {
         return res.status(400).json({
             success: false,
-            message: `Mesaj göndərmək üçün əvvəlcə ƏDV çeki bağışlamalısınız! Hər 1 çek = 1 mesaj haqqı verir. (Bağışladığınız çek sayı: ${donationsCount}, göndərdiyiniz mesaj sayı: ${userSentMessagesCount}) 💚`
+            message: 'Mesaj göndərmək üçün balansınızda Ürək 💚 yoxdur! Yeni ƏDV çeki yükləyərək ürək qazanın.'
         });
     }
+
+    // Deduct 1 Heart
+    userObj.hearts -= 1;
+    storage.saveUsers();
 
     const newMessage = {
         id: Date.now().toString(),
@@ -252,7 +270,7 @@ app.post('/api/messages', (req, res) => {
     storage.data.messages.push(newMessage);
     storage.saveMessages();
 
-    res.json({ success: true, message: 'Mesaj göndərildi.', messageObj: newMessage });
+    res.json({ success: true, message: 'Mesaj göndərildi (1 Ürək 💚 xərcləndi).', messageObj: newMessage, user: userObj });
 });
 
 // --- ADMIN POSTS & SOCIAL FEED APIS ---
@@ -325,7 +343,7 @@ app.post('/api/posts/:id/like', (req, res) => {
     res.json({ success: true, likes: post.likes, likedBy: post.likedBy });
 });
 
-// API: Add comment to post (1 receipt = 1 comment quota)
+// API: Add comment to post (spends 1 Heart 💚)
 app.post('/api/posts/:id/comment', (req, res) => {
     const postId = req.params.id;
     const { username, text } = req.body;
@@ -337,23 +355,21 @@ app.post('/api/posts/:id/comment', (req, res) => {
     const post = storage.data.posts.find(p => p.id === postId);
     if (!post) return res.status(404).json({ success: false, message: 'Paylaşım tapılmadı.' });
 
-    const userObj = storage.data.users[u] || {};
-    const donationsCount = userObj.donationsCount || 0;
+    const userObj = storage.data.users[u];
+    if (!userObj) {
+        return res.status(400).json({ success: false, message: 'İstifadəçi tapılmadı.' });
+    }
 
-    // Calculate total comments made by this user across all posts
-    let totalUserPostComments = 0;
-    storage.data.posts.forEach(p => {
-        if (p.comments) {
-            totalUserPostComments += p.comments.filter(c => c.username.toLowerCase() === u.toLowerCase()).length;
-        }
-    });
-
-    if (donationsCount <= 0 || totalUserPostComments >= donationsCount) {
+    if ((userObj.hearts || 0) <= 0) {
         return res.status(400).json({
             success: false,
-            message: `Rəy yazmaq üçün əvvəlcə ƏDV çeki bağışlamalısınız! Hər 1 çek = 1 rəy haqqı verir. (Bağışladığınız çek sayı: ${donationsCount}, yazdığınız rəy sayı: ${totalUserPostComments}) 💚`
+            message: 'Rəy yazmaq üçün balansınızda Ürək 💚 yoxdur! Yeni ƏDV çeki yükləyərək ürək qazanın.'
         });
     }
+
+    // Deduct 1 Heart
+    userObj.hearts -= 1;
+    storage.saveUsers();
 
     const newComment = {
         id: Date.now().toString(),
@@ -367,7 +383,7 @@ app.post('/api/posts/:id/comment', (req, res) => {
     post.comments.push(newComment);
     storage.savePosts();
 
-    res.json({ success: true, message: 'Komment əlavə olundu.', comment: newComment });
+    res.json({ success: true, message: 'Komment əlavə olundu (1 Ürək 💚 xərcləndi).', comment: newComment, user: userObj });
 });
 
 // API: Admin delete user
