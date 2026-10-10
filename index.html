@@ -224,7 +224,7 @@
 
     <script>
         let currentUser = localStorage.getItem('username') || '';
-        let API_BASE = "https://thanksgiving-bought-mime-ozone.trycloudflare.com";
+        let API_BASE = "";
         let currentAvatarBase64 = '';
         let activeReplyUser = null;
         let activeReplyAvatar = null;
@@ -257,7 +257,7 @@
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                // Keep fallback
+                console.error("Config oxunmadı:", e);
             }
         }
 

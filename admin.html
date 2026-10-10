@@ -94,15 +94,15 @@
 
     <script>
         const ADMIN_PASS = "admin331234";
-        let API_BASE = "https://thanksgiving-bought-mime-ozone.trycloudflare.com";
+        let API_BASE = "";
         let allReceipts = [];
         let autoRefreshInterval = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
+            await loadConfig();
             if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
                 showDashboard();
             }
-            await loadConfig();
         });
 
         function checkAdminPassword() {
@@ -141,7 +141,7 @@
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                // Keep fallback
+                console.error("Config oxunmadı:", e);
             }
         }
 
