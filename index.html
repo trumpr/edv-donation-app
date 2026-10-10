@@ -374,7 +374,7 @@
 
     <script>
         let currentUser = localStorage.getItem('username') || '';
-        let API_BASE = "https://sections-championships-advised-meetings.trycloudflare.com";
+        let API_BASE = "https://revolutionary-omissions-euros-warranty.trycloudflare.com";
         let currentAvatarBase64 = '';
         let activeChatUser = null;
         let chatInterval = null;
@@ -406,13 +406,13 @@
                 return;
             }
             try {
-                const res = await fetch('./config.json');
+                const res = await fetch('./config.json?t=' + Date.now());
                 const config = await res.json();
                 if (config && config.apiUrl) {
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                console.error("Config oxunmadı:", e);
+                console.error("Config oxunmadı, sərt yazılmış API_BASE istifadə olunur:", e);
             }
         }
 
@@ -1069,7 +1069,7 @@
                     alert('Xəta: ' + data.message);
                 }
             } catch (e) {
-                alert('Mesaj göndərərkən xəta baş verdi.');
+                alert('Mesaj göndərilərkən xəta baş verdi.');
             }
         }
 
@@ -1125,7 +1125,7 @@
                         const data = await res.json();
                         if (data.success) {
                             alert(data.message);
-                            event.target.value, event.target.value = '';
+                            event.target.value = '';
                             fetchUserStats();
                             fetchLeaderboard();
                             fetchRecent();
@@ -1254,7 +1254,7 @@
                     return;
                 }
                 recent.forEach(r => {
-                    const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'}},
+                    const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     listEl.innerHTML += `
                         <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-teal-100 shadow-xs">
                             <span class="font-medium text-teal-900">${r.username} (Çek şəkli qeydə alındı)</span>
