@@ -90,7 +90,7 @@ app.post('/api/donate', (req, res) => {
 
     res.json({
         success: true,
-        message: 'Təşəkkürlər! Çek şəkliniz uğurla qeydə alındı.',
+        message: 'Təşəkkürlər! Çek şəkliniz uğurla qeydə alındı. Artıq mesaj və rəy yazmaq üçün 1 çek haqqı qazandınız! 💚',
         user: storage.data.users[username],
         campaign
     });
@@ -168,6 +168,16 @@ app.post('/api/comments', (req, res) => {
 
     const u = username.trim();
     const userObj = storage.data.users[u] || {};
+    const donationsCount = userObj.donationsCount || 0;
+
+    // Check receipt quota (1 receipt = 1 message/comment quota)
+    const userCommentsCount = storage.data.comments.filter(c => c.username.toLowerCase() === u.toLowerCase()).length;
+    if (donationsCount <= 0 || userCommentsCount >= donationsCount) {
+        return res.status(400).json({
+            success: false,
+            message: `Rəy yazmaq üçün əvvəlcə ƏDV çeki bağışlamalısınız! Hər 1 çek = 1 rəy haqqı verir. (Bağışladığınız çek sayı: ${donationsCount}, yazdığınız rəy sayı: ${userCommentsCount}) 💚`
+        });
+    }
 
     const newComment = {
         id: Date.now().toString(),
@@ -211,16 +221,29 @@ app.get('/api/unread', (req, res) => {
     res.json({ count: incoming.length, messages: incoming });
 });
 
-// API: Send private message
+// API: Send private message (1 receipt = 1 message quota)
 app.post('/api/messages', (req, res) => {
     const { sender, receiver, text } = req.body;
     if (!sender || !receiver || !text || !text.trim()) {
         return res.status(400).json({ success: false, message: 'Göndərən, alan və mətn tələb olunur.' });
     }
 
+    const s = sender.trim();
+    const userObj = storage.data.users[s] || {};
+    const donationsCount = userObj.donationsCount || 0;
+
+    // Check receipt quota (1 receipt = 1 message quota)
+    const userSentMessagesCount = storage.data.messages.filter(m => m.sender.toLowerCase() === s.toLowerCase()).length;
+    if (donationsCount <= 0 || userSentMessagesCount >= donationsCount) {
+        return res.status(400).json({
+            success: false,
+            message: `Mesaj göndərmək üçün əvvəlcə ƏDV çeki bağışlamalısınız! Hər 1 çek = 1 mesaj haqqı verir. (Bağışladığınız çek sayı: ${donationsCount}, göndərdiyiniz mesaj sayı: ${userSentMessagesCount}) 💚`
+        });
+    }
+
     const newMessage = {
         id: Date.now().toString(),
-        sender: sender.trim(),
+        sender: s,
         receiver: receiver.trim(),
         text: text.trim(),
         timestamp: new Date().toISOString()
@@ -302,7 +325,7 @@ app.post('/api/posts/:id/like', (req, res) => {
     res.json({ success: true, likes: post.likes, likedBy: post.likedBy });
 });
 
-// API: Add comment to post (with emojis)
+// API: Add comment to post (1 receipt = 1 comment quota)
 app.post('/api/posts/:id/comment', (req, res) => {
     const postId = req.params.id;
     const { username, text } = req.body;
@@ -310,13 +333,31 @@ app.post('/api/posts/:id/comment', (req, res) => {
         return res.status(400).json({ success: false, message: 'İstifadəçi adı və mətn tələb olunur.' });
     }
 
+    const u = username.trim();
     const post = storage.data.posts.find(p => p.id === postId);
     if (!post) return res.status(404).json({ success: false, message: 'Paylaşım tapılmadı.' });
 
-    const userObj = storage.data.users[username] || {};
+    const userObj = storage.data.users[u] || {};
+    const donationsCount = userObj.donationsCount || 0;
+
+    // Calculate total comments made by this user across all posts
+    let totalUserPostComments = 0;
+    storage.data.posts.forEach(p => {
+        if (p.comments) {
+            totalUserPostComments += p.comments.filter(c => c.username.toLowerCase() === u.toLowerCase()).length;
+        }
+    });
+
+    if (donationsCount <= 0 || totalUserPostComments >= donationsCount) {
+        return res.status(400).json({
+            success: false,
+            message: `Rəy yazmaq üçün əvvəlcə ƏDV çeki bağışlamalısınız! Hər 1 çek = 1 rəy haqqı verir. (Bağışladığınız çek sayı: ${donationsCount}, yazdığınız rəy sayı: ${totalUserPostComments}) 💚`
+        });
+    }
+
     const newComment = {
         id: Date.now().toString(),
-        username: username.trim(),
+        username: u,
         avatarBase64: userObj.avatarBase64 || '',
         text: text.trim(),
         timestamp: new Date().toISOString()
