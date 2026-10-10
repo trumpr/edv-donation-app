@@ -225,14 +225,37 @@ app.get('/api/messages', (req, res) => {
     res.json(conversation);
 });
 
-// API: Check unread messages for user
+// API: Check unread messages for user (only unread)
 app.get('/api/unread', (req, res) => {
     const { username } = req.query;
     if (!username) return res.json({ count: 0, messages: [] });
 
     const u = username.trim().toLowerCase();
-    const incoming = storage.data.messages.filter(m => m.receiver.toLowerCase() === u);
+    const incoming = storage.data.messages.filter(m => m.receiver.toLowerCase() === u && !m.read);
     res.json({ count: incoming.length, messages: incoming });
+});
+
+// API: Mark messages as read between two users
+app.post('/api/messages/mark-read', (req, res) => {
+    const { reader, sender } = req.body;
+    if (!reader || !sender) return res.status(400).json({ success: false, message: 'İştirakçılar tələb olunur.' });
+
+    const r = reader.trim().toLowerCase();
+    const s = sender.trim().toLowerCase();
+
+    let updated = false;
+    storage.data.messages.forEach(m => {
+        if (m.receiver.toLowerCase() === r && m.sender.toLowerCase() === s && !m.read) {
+            m.read = true;
+            updated = true;
+        }
+    });
+
+    if (updated) {
+        storage.saveMessages();
+    }
+
+    res.json({ success: true });
 });
 
 // API: Send private message (spends 1 Heart 💚, allows full length message text with paragraphs/sentences)
@@ -264,6 +287,7 @@ app.post('/api/messages', (req, res) => {
         sender: s,
         receiver: receiver.trim(),
         text: text.trim(),
+        read: false,
         timestamp: new Date().toISOString()
     };
 
