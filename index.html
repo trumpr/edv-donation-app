@@ -25,6 +25,15 @@
             <img src="./banner.png" alt="Bir kliklə yaxşılıq et!" class="w-full h-auto object-cover max-h-80">
         </div>
 
+        <!-- Receipt QR Upload Button Section (Right below banner image) -->
+        <div class="p-4 bg-white border-b flex items-center justify-center animate-pulse">
+            <input type="file" id="receiptPhotoInput" accept="image/*" capture="environment" class="hidden" onchange="uploadReceiptPhoto(event)">
+            <div onclick="triggerPhotoCapture()" class="cursor-pointer group flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 rounded-2xl shadow-xl hover:from-emerald-700 hover:to-teal-700 transition transform hover:scale-105 border-2 border-emerald-400 w-full justify-center max-w-sm">
+                <img src="./qr.jpeg" alt="QR Yüklə" class="w-10 h-10 object-cover rounded-xl border-2 border-white shadow-md">
+                <span class="text-sm font-extrabold text-white tracking-wide">ƏDV Çək</span>
+            </div>
+        </div>
+
         <!-- Hamburger Slide-over Menu -->
         <div id="hamburgerMenuModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex justify-end" onclick="toggleHamburgerMenu()">
             <div class="bg-white w-72 h-full shadow-2xl p-6 flex flex-col justify-between space-y-6" onclick="event.stopPropagation()">
