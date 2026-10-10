@@ -230,31 +230,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Comments Section -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span>💬</span> İcma Müzakirəsi və Kommentlər
-                </h2>
-                <div class="space-y-3">
-                    <div class="flex items-center gap-2">
-                        <div id="commentUserAvatar" class="w-7 h-7 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-xs shrink-0 overflow-hidden shadow-inner">?</div>
-                        <span id="commentUsernameLabel" class="text-xs font-bold text-slate-700">Daxil olunmayıb</span>
-                    </div>
-
-                    <!-- Reply Preview Box -->
-                    <div id="replyPreviewBox" class="hidden flex items-center justify-between bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 text-xs text-emerald-900">
-                        <span id="replyPreviewText">Kiməsə cavab yazırsınız</span>
-                        <button onclick="cancelReply()" class="text-red-600 font-bold hover:underline">✕ Ləğv et</button>
-                    </div>
-
-                    <textarea id="commentTextInput" rows="2" placeholder="Fikir və rəylərinizi burada paylaşın..." class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm bg-slate-50"></textarea>
-                    <button onclick="postComment()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl font-bold transition shadow text-sm">Rəy Bildir</button>
-                </div>
-                <div id="commentsList" class="space-y-3 pt-2 border-t border-slate-100 max-h-60 overflow-y-auto">
-                    <!-- Comments loaded dynamically -->
-                </div>
-            </div>
         </main>
 
         <!-- Footer -->
@@ -267,9 +242,6 @@
         let currentUser = localStorage.getItem('username') || '';
         let API_BASE = "https://converted-interior-jpg-viewers.trycloudflare.com";
         let currentAvatarBase64 = '';
-        let activeReplyUser = null;
-        let activeReplyAvatar = null;
-        let allComments = [];
         let activeChatUser = null;
         let chatInterval = null;
         let notifInterval = null;
@@ -286,7 +258,6 @@
             fetchCampaigns();
             fetchLeaderboard();
             fetchRecent();
-            fetchComments();
             fetchParticipants();
         });
 
@@ -344,7 +315,6 @@
                     fetchLeaderboard();
                     fetchRecent();
                     fetchParticipants();
-                    updateCommentBoxUser();
                     startNotificationPolling();
                 } else {
                     alert('Xəta: ' + data.message);
@@ -361,14 +331,12 @@
             document.getElementById('profileSection').classList.add('hidden');
             document.getElementById('pinInput').value = '';
             if (notifInterval) clearInterval(notifInterval);
-            updateCommentBoxUser();
         }
 
         function showProfile() {
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('profileSection').classList.remove('hidden');
             document.getElementById('displayUsername').innerText = currentUser;
-            updateCommentBoxUser();
         }
 
         function openProfileModal() {
@@ -449,8 +417,6 @@
                     fetchUserStats();
                     fetchLeaderboard();
                     fetchParticipants();
-                    updateCommentBoxUser();
-                    fetchComments();
                 } else {
                     alert('Xəta: ' + data.message);
                 }
@@ -796,23 +762,6 @@
             }
         }
 
-        async function updateCommentBoxUser() {
-            const avatarEl = document.getElementById('commentUserAvatar');
-            const nameEl = document.getElementById('commentUsernameLabel');
-            if (currentUser) {
-                nameEl.innerText = currentUser;
-                const data = await fetchUserStats();
-                if (data && data.avatarBase64) {
-                    avatarEl.innerHTML = `<img src="${data.avatarBase64}" class="w-full h-full object-cover">`;
-                } else {
-                    avatarEl.innerText = currentUser.charAt(0).toUpperCase();
-                }
-            } else {
-                nameEl.innerText = "Daxil olunmayıb";
-                avatarEl.innerText = "?";
-            }
-        }
-
         async function fetchLeaderboard() {
             try {
                 const res = await fetch(API_BASE + '/api/leaderboard');
@@ -871,128 +820,6 @@
             } catch (e) {
                 console.error(e);
             }
-        }
-
-        async function fetchComments() {
-            try {
-                const res = await fetch(API_BASE + '/api/comments');
-                const comments = await res.json();
-                allComments = comments || [];
-                const listEl = document.getElementById('commentsList');
-                listEl.innerHTML = '';
-                if (allComments.length === 0) {
-                    listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center">Hələ rəy yazılmayıb. İlk rəyi siz yazın!</p>';
-                    return;
-                }
-                allComments.slice().reverse().forEach((c, idx) => {
-                    const actualIndex = allComments.length - 1 - idx;
-                    const timeStr = new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    let avatarHtml = `<div class="w-7 h-7 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-xs shrink-0">${c.username.charAt(0).toUpperCase()}</div>`;
-                    if (c.avatarBase64) {
-                        avatarHtml = `<img src="${c.avatarBase64}" onclick="openAvatarZoom('${c.avatarBase64.replace(/'/g, "\\'")}')" class="w-7 h-7 rounded-full object-cover shrink-0 cursor-pointer hover:scale-110 transition transform" title="Şəkli böyütmək üçün basın">`;
-                    }
-
-                    let replyQuoteHtml = '';
-                    if (c.replyTo) {
-                        let replyAvatarHtml = `<div class="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-[9px] shrink-0">${c.replyTo.charAt(0).toUpperCase()}</div>`;
-                        if (c.replyToAvatar) {
-                            replyAvatarHtml = `<img src="${c.replyToAvatar}" class="w-4 h-4 rounded-full object-cover shrink-0">`;
-                        }
-                        replyQuoteHtml = `
-                            <div class="flex items-center gap-1.5 bg-emerald-50 text-emerald-900 px-2.5 py-1 rounded-lg text-[11px] mb-1.5 w-fit border border-emerald-200 font-medium">
-                                <span>↩</span>
-                                ${replyAvatarHtml}
-                                <span><strong>${c.replyTo}</strong> adlı şəxsə cavab</span>
-                            </div>
-                        `;
-                    }
-
-                    listEl.innerHTML += `
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2 font-bold text-emerald-900">
-                                    ${avatarHtml}
-                                    <span>${c.username}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <button onclick="replyToUser(${actualIndex})" class="text-[10px] text-emerald-600 hover:underline font-semibold">💬 Cavab yaz</button>
-                                    <span class="text-[10px] text-slate-400 font-normal">${timeStr}</span>
-                                </div>
-                            </div>
-                            ${replyQuoteHtml}
-                            <p class="text-slate-700 whitespace-pre-line pl-9">${escapeHtml(c.text)}</p>
-                        </div>
-                    `;
-                });
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        async function postComment() {
-            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
-            const text = document.getElementById('commentTextInput').value.trim();
-            if (!text) return alert('Zəhmət olmasa rəy mətnini dain edin');
-
-            try {
-                const res = await fetch(API_BASE + '/api/comments', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username: currentUser,
-                        text,
-                        replyTo: activeReplyUser,
-                        replyToAvatar: activeReplyAvatar
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById('commentTextInput').value = '';
-                    cancelReply();
-                    fetchComments();
-                } else {
-                    alert('Xəta: ' + data.message);
-                }
-            } catch (e) {
-                alert('Rəy göndərilərkən xəta baş verdi.');
-            }
-        }
-
-        function replyToUser(index) {
-            const targetComment = allComments[index];
-            if (!targetComment) return;
-
-            activeReplyUser = targetComment.username;
-            activeReplyAvatar = targetComment.avatarBase64 || null;
-            const box = document.getElementById('replyPreviewBox');
-
-            let replyAvatarHtml = `<div class="w-5 h-5 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-[10px] shrink-0">${activeReplyUser.charAt(0).toUpperCase()}</div>`;
-            if (activeReplyAvatar) {
-                replyAvatarHtml = `<img src="${activeReplyAvatar}" class="w-5 h-5 rounded-full object-cover shrink-0">`;
-            }
-
-            const text = document.getElementById('replyPreviewText');
-            text.innerHTML = `<div class="flex items-center gap-2"><span>💬</span> ${replyAvatarHtml} <span><b>${activeReplyUser}</b> adlı şəxsə cavab yazırsınız</span></div>`;
-            box.classList.remove('hidden');
-
-            const textarea = document.getElementById('commentTextInput');
-            textarea.focus();
-            textarea.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function cancelReply() {
-            activeReplyUser = null;
-            activeReplyAvatar = null;
-            document.getElementById('replyPreviewBox').classList.add('hidden');
-        }
-
-        function openAvatarZoom(imgUrl) {
-            document.getElementById('modalAvatarImg').src = imgUrl;
-            document.getElementById('avatarZoomModal').classList.remove('hidden');
-        }
-
-        function closeAvatarZoom() {
-            document.getElementById('avatarZoomModal').classList.add('hidden');
         }
 
         function escapeHtml(text) {
