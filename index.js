@@ -577,6 +577,30 @@ app.post('/api/admin/adjust-hearts', (req, res) => {
     res.json({ success: true, message: 'Ürəklər yeniləndi.', user: storage.data.users[username] });
 });
 
+// API: Admin delete specific receipt folder (100 receipts)
+app.post('/api/admin/delete-folder', (req, res) => {
+    const { folderIndex, password } = req.body;
+    if (password !== 'admin331234') {
+        return res.status(403).json({ success: false, message: 'Admin parol səhvdir.' });
+    }
+
+    const FOLDER_SIZE = 100;
+    const fIdx = parseInt(folderIndex);
+    if (isNaN(fIdx) || fIdx < 0) {
+        return res.status(400).json({ success: false, message: 'Yanlış qovluq indeksi.' });
+    }
+
+    const start = fIdx * FOLDER_SIZE;
+
+    // Remove receipts in this range
+    if (start < storage.data.receipts.length) {
+        storage.data.receipts.splice(start, FOLDER_SIZE);
+        storage.saveReceipts();
+    }
+
+    res.json({ success: true, message: 'Qovluq və içindəki çeklər silindi.' });
+});
+
 // API: Admin data overview
 app.get('/api/admin/data', (req, res) => {
     res.json({

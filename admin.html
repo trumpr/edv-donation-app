@@ -141,7 +141,7 @@
             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden space-y-2">
                 <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
                     <h2 class="font-bold text-slate-800 text-xs">📸 Göndərilən Çek Qovluqları (Hərəsində 100 ədəd)</h2>
-                    <button onclick="clearAllReceipts()" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-200 transition">🗑️ Çekləri Təmizlə</button>
+                    <button onclick="clearAllReceipts()" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-200 transition">🗑️ Bütün Çekləri Təmizlə</button>
                 </div>
                 <!-- Folders Accordion Container -->
                 <div id="receiptFoldersAccordion" class="p-4 space-y-3">
@@ -547,12 +547,15 @@
 
                 container.innerHTML += `
                     <div class="border rounded-xl overflow-hidden bg-slate-50 shadow-xs">
-                        <button onclick="toggleFolder(${fIdx})" class="w-full p-3.5 bg-white hover:bg-slate-50 flex justify-between items-center font-bold text-xs text-slate-800 transition">
-                            <span class="flex items-center gap-2">
+                        <div class="w-full p-3.5 bg-white hover:bg-slate-50 flex justify-between items-center transition">
+                            <button onclick="toggleFolder(${fIdx})" class="flex-1 text-left font-bold text-xs text-slate-800 flex items-center gap-2">
                                 <span>📁</span> Qovluq ${fIdx + 1} <span class="text-slate-500 font-normal">(${f.start} - ${f.end} çek)</span>
-                            </span>
-                            <span class="text-slate-400">${arrowIcon}</span>
-                        </button>
+                            </button>
+                            <div class="flex items-center gap-3">
+                                <button onclick="deleteFolder(${fIdx})" class="bg-red-100 hover:bg-red-200 text-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition" title="Bu qovluğu və içindəki çekləri sil">🗑️ Sil</button>
+                                <button onclick="toggleFolder(${fIdx})" class="text-slate-400 font-bold">${arrowIcon}</button>
+                            </div>
+                        </div>
                         <div id="folderContent_${fIdx}" class="${contentClass} border-t bg-white overflow-x-auto">
                             <table class="w-full text-left text-xs">
                                 <thead class="bg-slate-100 text-slate-600 uppercase text-[10px]">
@@ -579,6 +582,28 @@
                 openFolderIndex = fIdx; // open this one
             }
             renderAdminReceipts();
+        }
+
+        async function deleteFolder(fIdx) {
+            if (!confirm(`Qovluq ${fIdx + 1} və içindəki bütün çekləri silmək istədiyinizə əminsiniz?`)) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/admin/delete-folder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ folderIndex: fIdx, password: ADMIN_PASS })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Qovluq və içindəki çeklər silindi.');
+                    openFolderIndex = null;
+                    loadAdminData();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('Qovluq silinərkən xəta baş verdi.');
+            }
         }
 
         async function clearAllReceipts() {
