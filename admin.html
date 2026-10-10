@@ -146,8 +146,21 @@
         }
 
         async function loadAdminData() {
+            if (!API_BASE) {
+                await loadConfig();
+            }
+            if (!API_BASE) {
+                document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-red-500 animate-pulse";
+                document.getElementById('statusText').innerText = "API ünvanı tapılmadı";
+                return;
+            }
+
             try {
                 const res = await fetch(API_BASE + '/api/admin/data');
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Cloudflare təhlükəsizlik səhifəsi alındı");
+                }
                 const data = await res.json();
                 allReceipts = data.receipts || [];
 
@@ -196,7 +209,7 @@
             } catch (e) {
                 // Turn status indicator RED
                 document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-red-500 animate-pulse";
-                document.getElementById('statusText').innerText = "Qoşulmur (Offline)";
+                document.getElementById('statusText').innerText = "Qoşulmur (Offline / Cloudflare)";
                 console.error(e);
             }
         }
