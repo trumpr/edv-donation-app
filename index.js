@@ -386,6 +386,23 @@ app.post('/api/admin/delete-user', (req, res) => {
     res.json({ success: true, message: 'İştirakçı uğurla silindi.' });
 });
 
+// API: Admin adjust user points
+app.post('/api/admin/adjust-points', (req, res) => {
+    const { username, amount, password } = req.body;
+    if (password !== 'admin331234') {
+        return res.status(403).json({ success: false, message: 'Admin parol səhvdir.' });
+    }
+    if (!username || !storage.data.users[username]) {
+        return res.status(404).json({ success: false, message: 'İştirakçı tapılmadı.' });
+    }
+
+    const numAmount = parseInt(amount) || 0;
+    storage.data.users[username].points = Math.max(0, (storage.data.users[username].points || 0) + numAmount);
+    storage.saveUsers();
+
+    res.json({ success: true, message: 'Xallar yeniləndi.', user: storage.data.users[username] });
+});
+
 // API: Admin data overview
 app.get('/api/admin/data', (req, res) => {
     res.json({
