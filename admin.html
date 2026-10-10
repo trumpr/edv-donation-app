@@ -137,11 +137,15 @@
                 </div>
             </div>
 
-            <!-- Receipts Table -->
-            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+            <!-- Receipts Folders & Table -->
+            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden space-y-2">
                 <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
-                    <h2 class="font-bold text-slate-800 text-xs">📸 Göndərilən Çek Şəkilləri</h2>
+                    <h2 class="font-bold text-slate-800 text-xs">📸 Göndərilən Çek Qovluqları (Hərəsində 100 ədəd)</h2>
                     <button onclick="clearAllReceipts()" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-200 transition">🗑️ Çekləri Təmizlə</button>
+                </div>
+                <!-- Folders Navigation Bar -->
+                <div id="receiptFoldersBar" class="flex gap-2 overflow-x-auto p-3 bg-slate-100/70 border-b">
+                    <!-- Folder tabs loaded dynamically -->
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
@@ -174,6 +178,7 @@
         let allUsers = {};
         let adminPostImageBase64 = '';
         let autoRefreshInterval = null;
+        let activeReceiptFolder = 0;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadConfig();
@@ -499,39 +504,77 @@
                     });
                 }
 
-                // Table
-                const tbody = document.getElementById('receiptsTableBody');
-                tbody.innerHTML = '';
-                if (allReceipts.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Hələ heç bir çek şəkli göndərilməyib.</td></tr>`;
-                    return;
-                }
-
-                allReceipts.slice().reverse().forEach((r, idx) => {
-                    const actualIndex = allReceipts.length - 1 - idx;
-                    const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                    let receiptMedia = `<span class="text-xs text-slate-400 italic">Şəkil yoxdur</span>`;
-                    if (r.imageBase64) {
-                        receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal(${actualIndex})" class="w-14 h-14 object-cover rounded-lg border bg-white p-0.5 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
-                    }
-
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-2.5 text-slate-500 whitespace-nowrap">${timeStr}</td>
-                            <td class="p-2.5 font-bold text-slate-800">${r.username}</td>
-                            <td class="p-2.5">
-                                ${receiptMedia}
-                            </td>
-                        </tr>
-                    `;
-                });
+                // Render Receipts Folders & Table
+                renderAdminReceipts();
             } catch (e) {
                 // Turn status indicator RED
                 document.getElementById('statusDot').className = "w-3.5 h-3.5 rounded-full bg-red-500 animate-pulse";
                 document.getElementById('statusText').innerText = "Server Qoşulmur (Offline / Cloudflare)";
                 console.error(e);
             }
+        }
+
+        function renderAdminReceipts() {
+            const foldersBar = document.getElementById('receiptFoldersBar');
+            const tbody = document.getElementById('receiptsTableBody');
+
+            if (allReceipts.length === 0) {
+                if (foldersBar) foldersBar.innerHTML = '';
+                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Hələ heç bir çek şəkli göndərilməyib.</td></tr>`;
+                return;
+            }
+
+            const FOLDER_SIZE = 100;
+            const folders = [];
+            for (let i = 0; i < allReceipts.length; i += FOLDER_SIZE) {
+                folders.push({
+                    start: i + 1,
+                    end: Math.min(i + FOLDER_SIZE, allReceipts.length),
+                    items: allReceipts.slice(i, i + FOLDER_SIZE)
+                });
+            }
+
+            if (activeReceiptFolder >= folders.length) {
+                activeReceiptFolder = 0;
+            }
+
+            // Render folders tabs
+            if (foldersBar) {
+                foldersBar.innerHTML = '';
+                folders.forEach((f, fIdx) => {
+                    const isActive = fIdx === activeReceiptFolder;
+                    const btnClass = isActive ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 hover:bg-slate-100 border';
+                    foldersBar.innerHTML += `
+                        <button onclick="activeReceiptFolder = ${fIdx}; renderAdminReceipts();" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${btnClass}">
+                            📁 Qovluq ${fIdx + 1} (${f.start}-${f.end})
+                        </button>
+                    `;
+                });
+            }
+
+            tbody.innerHTML = '';
+            const currentFolderItems = folders[activeReceiptFolder] ? folders[activeReceiptFolder].items : [];
+
+            currentFolderItems.slice().reverse().forEach((r, idx) => {
+                const actualIndex = (activeReceiptFolder * FOLDER_SIZE) + (currentFolderItems.length - 1 - idx);
+                const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateStr = new Date(r.timestamp).toLocaleDateString();
+
+                let receiptMedia = `<span class="text-xs text-slate-400 italic">Şəkil yoxdur</span>`;
+                if (r.imageBase64) {
+                    receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal(${actualIndex})" class="w-14 h-14 object-cover rounded-lg border bg-white p-0.5 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 text-slate-500 whitespace-nowrap">${dateStr} ${timeStr}</td>
+                        <td class="p-2.5 font-bold text-slate-800">${r.username}</td>
+                        <td class="p-2.5">
+                            ${receiptMedia}
+                        </td>
+                    </tr>
+                `;
+            });
         }
 
         async function clearAllReceipts() {
@@ -543,6 +586,7 @@
                 const data = await res.json();
                 if (data.success) {
                     alert('Bütün çeklər təmizləndi.');
+                    activeReceiptFolder = 0;
                     loadAdminData();
                 } else {
                     alert('Xəta baş verdi.');
