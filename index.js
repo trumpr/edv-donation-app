@@ -169,7 +169,7 @@ app.get('/api/comments', (req, res) => {
     res.json(storage.data.comments);
 });
 
-// API: Post a comment (spends 1 Heart 💚)
+// API: Post a comment (spends 1 Heart 💚, allows full length message text)
 app.post('/api/comments', (req, res) => {
     const { username, text, replyTo, replyToAvatar } = req.body;
     if (!username || !text || !text.trim()) {
@@ -185,7 +185,7 @@ app.post('/api/comments', (req, res) => {
     if ((userObj.hearts || 0) <= 0) {
         return res.status(400).json({
             success: false,
-            message: 'Rəy yazmaq üçün balansınızda Ürək 💚 yoxdur! Yeni ƏDV çeki yükləyərək ürək qazanın.'
+            message: 'Rəy yazmaq üçün balansınızda Ürək 💚 yoxdur! İstədiyiniz uzunluqda rəy yazabilmək üçün yeni ƏDV çeki yükləyərək Ürək qazanın 💚'
         });
     }
 
@@ -235,7 +235,7 @@ app.get('/api/unread', (req, res) => {
     res.json({ count: incoming.length, messages: incoming });
 });
 
-// API: Send private message (spends 1 Heart 💚)
+// API: Send private message (spends 1 Heart 💚, allows full length message text with paragraphs/sentences)
 app.post('/api/messages', (req, res) => {
     const { sender, receiver, text } = req.body;
     if (!sender || !receiver || !text || !text.trim()) {
@@ -251,11 +251,11 @@ app.post('/api/messages', (req, res) => {
     if ((userObj.hearts || 0) <= 0) {
         return res.status(400).json({
             success: false,
-            message: 'Mesaj göndərmək üçün balansınızda Ürək 💚 yoxdur! Yeni ƏDV çeki yükləyərək ürək qazanın.'
+            message: 'Mesaj göndərmək üçün balansınızda Ürək 💚 yoxdur! İstədiyiniz uzunluqda mesaj yaza bilmək üçün yeni ƏDV çeki yükləyərək 1 Ürək qazanın 💚'
         });
     }
 
-    // Deduct 1 Heart
+    // Deduct 1 Heart for this message
     userObj.hearts -= 1;
     storage.saveUsers();
 
@@ -343,7 +343,7 @@ app.post('/api/posts/:id/like', (req, res) => {
     res.json({ success: true, likes: post.likes, likedBy: post.likedBy });
 });
 
-// API: Add comment to post (spends 1 Heart 💚)
+// API: Add comment to post (spends 1 Heart 💚, allows full length message text)
 app.post('/api/posts/:id/comment', (req, res) => {
     const postId = req.params.id;
     const { username, text } = req.body;
@@ -363,7 +363,7 @@ app.post('/api/posts/:id/comment', (req, res) => {
     if ((userObj.hearts || 0) <= 0) {
         return res.status(400).json({
             success: false,
-            message: 'Rəy yazmaq üçün balansınızda Ürək 💚 yoxdur! Yeni ƏDV çeki yükləyərək ürək qazanın.'
+            message: 'Rəy yazmaq üçün balansınızda Ürək 💚 yoxdur! İstədiyiniz uzunluqda rəy yaza bilmək üçün yeni ƏDV çeki yükləyərək 1 Ürək qazanın 💚'
         });
     }
 
