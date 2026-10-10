@@ -216,6 +216,16 @@
                 </div>
             </div>
 
+            <!-- Admin Posts & Social Feed Section -->
+            <div class="space-y-4">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span>📢</span> Admin Paylaşımları və Xəbərlər
+                </h2>
+                <div id="postsFeedList" class="space-y-5">
+                    <!-- Posts loaded dynamically -->
+                </div>
+            </div>
+
             <!-- Leaderboard & Recent Activity Tabs -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <!-- Top Donors -->
@@ -255,6 +265,7 @@
         let notifInterval = null;
         let allParticipants = [];
         let allCampaigns = [];
+        let allPosts = [];
         let lastKnownMsgCount = 0;
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -268,6 +279,7 @@
             fetchLeaderboard();
             fetchRecent();
             fetchParticipants();
+            fetchPosts();
         });
 
         async function loadConfig() {
@@ -278,7 +290,7 @@
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                console.error("Config oxunmadı, fallback istifadə olunur:", API_BASE);
+                console.error("Config oxunmadı:", e);
             }
         }
 
@@ -440,6 +452,149 @@
                 }
             } catch (e) {
                 alert('Profil yadda saxlanılarkən xəta baş verdi.');
+            }
+        }
+
+        // --- Social Feed & Posts ---
+        async function fetchPosts() {
+            try {
+                const res = await fetch(API_BASE + '/api/posts');
+                allPosts = await res.json();
+                renderPosts();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderPosts() {
+            const listEl = document.getElementById('postsFeedList');
+            listEl.innerHTML = '';
+            if (allPosts.length === 0) {
+                listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center">Hələ admin paylaşımı yoxdur.</p>';
+                return;
+            }
+
+            allPosts.forEach((post, pIdx) => {
+                const timeStr = new Date(post.timestamp).toLocaleString();
+                const isLiked = currentUser && post.likedBy && post.likedBy.includes(currentUser);
+                const likeHeartClass = isLiked ? 'text-red-500 fill-current' : 'text-slate-400';
+
+                let imageHtml = '';
+                if (post.imageBase64) {
+                    imageHtml = `<div class="bg-slate-50 rounded-xl overflow-hidden border"><img src="${post.imageBase64}" class="w-full max-h-72 object-cover"></div>`;
+                }
+
+                let commentsHtml = '';
+                if (post.comments && post.comments.length > 0) {
+                    post.comments.forEach(com => {
+                        let comAvatar = `<div class="w-6 h-6 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center text-[10px] shrink-0">${com.username.charAt(0).toUpperCase()}</div>`;
+                        if (com.avatarBase64) {
+                            comAvatar = `<img src="${com.avatarBase64}" class="w-6 h-6 rounded-full object-cover shrink-0">`;
+                        }
+                        commentsHtml += `
+                            <div class="bg-slate-50 p-2 rounded-xl border text-xs space-y-0.5">
+                                <div class="flex items-center gap-2 font-bold text-emerald-900">
+                                    ${comAvatar}
+                                    <span>${com.username}</span>
+                                </div>
+                                <p class="text-slate-700 pl-8">${escapeHtml(com.text)}</p>
+                            </div>
+                        `;
+                    });
+                } else {
+                    commentsHtml = '<p class="text-slate-400 italic text-[11px]">Hələ rəy yazılmayıb.</p>';
+                }
+
+                listEl.innerHTML += `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                        <div class="flex justify-between items-center text-xs text-slate-400">
+                            <span class="font-bold text-slate-900">👑 Admin Elanı</span>
+                            <span>${timeStr}</span>
+                        </div>
+                        <p class="font-bold text-slate-800 text-sm whitespace-pre-line">${escapeHtml(post.title)}</p>
+                        ${imageHtml}
+
+                        <!-- Likes & Comments Actions -->
+                        <div class="flex items-center gap-4 pt-2 border-t text-xs">
+                            <button onclick="toggleLike('${post.id}')" class="flex items-center gap-1.5 font-bold hover:opacity-80 transition">
+                                <span class="text-lg ${likeHeartClass}">❤️</span>
+                                <span>${post.likes || 0} Bəyənmə</span>
+                            </button>
+                        </div>
+
+                        <!-- Comments Box -->
+                        <div class="space-y-2 pt-2 border-t">
+                            <div class="max-h-40 overflow-y-auto space-y-2">
+                                ${commentsHtml}
+                            </div>
+                            <!-- Comment Input & Emojis -->
+                            <div class="space-y-1.5 pt-1">
+                                <div class="flex gap-1 text-sm overflow-x-auto pb-1">
+                                    <button onclick="addEmojiToInput('${post.id}', '😊')" class="p-1 hover:bg-slate-100 rounded">😊</button>
+                                    <button onclick="addEmojiToInput('${post.id}', '👍')" class="p-1 hover:bg-slate-100 rounded">👍</button>
+                                    <button onclick="addEmojiToInput('${post.id}', '❤️')" class="p-1 hover:bg-slate-100 rounded">❤️</button>
+                                    <button onclick="addEmojiToInput('${post.id}', '🌳')" class="p-1 hover:bg-slate-100 rounded">🌳</button>
+                                    <button onclick="addEmojiToInput('${post.id}', '🎉')" class="p-1 hover:bg-slate-100 rounded">🎉</button>
+                                    <button onclick="addEmojiToInput('${post.id}', '👏')" class="p-1 hover:bg-slate-100 rounded">👏</button>
+                                    <button onclick="addEmojiToInput('${post.id}', '🔥')" class="p-1 hover:bg-slate-100 rounded">🔥</button>
+                                </div>
+                                <div class="flex gap-2">
+                                    <input type="text" id="commentInput_${post.id}" placeholder="Rəy yazın..." onkeydown="if(event.key === 'Enter') submitPostComment('${post.id}')" class="flex-1 p-2 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                                    <button onclick="submitPostComment('${post.id}')" class="bg-slate-900 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-slate-800">Göndər</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function toggleLike(postId) {
+            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
+            try {
+                const res = await fetch(API_BASE + `/api/posts/${postId}/like`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    fetchPosts();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function addEmojiToInput(postId, emoji) {
+            const input = document.getElementById(`commentInput_${postId}`);
+            if (input) {
+                input.value += emoji;
+                input.focus();
+            }
+        }
+
+        async function submitPostComment(postId) {
+            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
+            const input = document.getElementById(`commentInput_${postId}`);
+            const text = input.value.trim();
+            if (!text) return;
+
+            try {
+                const res = await fetch(API_BASE + `/api/posts/${postId}/comment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, text })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    input.value = '';
+                    fetchPosts();
+                } else {
+                    alert('Xəta: ' + data.message);
+                }
+            } catch (e) {
+                alert('Rəy göndərilərkən xəta baş verdi.');
             }
         }
 

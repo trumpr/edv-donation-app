@@ -232,6 +232,103 @@ app.post('/api/messages', (req, res) => {
     res.json({ success: true, message: 'Mesaj göndərildi.', messageObj: newMessage });
 });
 
+// --- ADMIN POSTS & SOCIAL FEED APIS ---
+
+// API: Get all admin posts
+app.get('/api/posts', (req, res) => {
+    res.json(storage.data.posts);
+});
+
+// API: Admin create post
+app.post('/api/posts', (req, res) => {
+    const { title, imageBase64, password } = req.body;
+    if (password !== 'admin331234') {
+        return res.status(403).json({ success: false, message: 'Admin parol səhvdir.' });
+    }
+    if (!title || !title.trim()) {
+        return res.status(400).json({ success: false, message: 'Başlıq tələb olunur.' });
+    }
+
+    const newPost = {
+        id: Date.now().toString(),
+        title: title.trim(),
+        imageBase64: imageBase64 || null,
+        likes: 0,
+        likedBy: [],
+        comments: [],
+        timestamp: new Date().toISOString()
+    };
+
+    storage.data.posts.unshift(newPost);
+    storage.savePosts();
+
+    res.json({ success: true, message: 'Paylaşım uğurla yayımlandı.', post: newPost });
+});
+
+// API: Admin delete post
+app.post('/api/posts/delete', (req, res) => {
+    const { postId, password } = req.body;
+    if (password !== 'admin331234') {
+        return res.status(403).json({ success: false, message: 'Admin parol səhvdir.' });
+    }
+
+    storage.data.posts = storage.data.posts.filter(p => p.id !== postId);
+    storage.savePosts();
+
+    res.json({ success: true, message: 'Paylaşım silindi.' });
+});
+
+// API: Like / Unlike post
+app.post('/api/posts/:id/like', (req, res) => {
+    const postId = req.params.id;
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ success: false, message: 'İstifadəçi adı tələb olunur.' });
+
+    const post = storage.data.posts.find(p => p.id === postId);
+    if (!post) return res.status(404).json({ success: false, message: 'Paylaşım tapılmadı.' });
+
+    if (!post.likedBy) post.likedBy = [];
+
+    const index = post.likedBy.indexOf(username);
+    if (index > -1) {
+        post.likedBy.splice(index, 1);
+        post.likes = Math.max(0, post.likes - 1);
+    } else {
+        post.likedBy.push(username);
+        post.likes += 1;
+    }
+    storage.savePosts();
+
+    res.json({ success: true, likes: post.likes, likedBy: post.likedBy });
+});
+
+// API: Add comment to post (with emojis)
+app.post('/api/posts/:id/comment', (req, res) => {
+    const postId = req.params.id;
+    const { username, text } = req.body;
+    if (!username || !text || !text.trim()) {
+        return res.status(400).json({ success: false, message: 'İstifadəçi adı və mətn tələb olunur.' });
+    }
+
+    const post = storage.data.posts.find(p => p.id === postId);
+    if (!post) return res.status(404).json({ success: false, message: 'Paylaşım tapılmadı.' });
+
+    const userObj = storage.data.users[username] || {};
+    const newComment = {
+        id: Date.now().toString(),
+        username: username.trim(),
+        avatarBase64: userObj.avatarBase64 || '',
+        text: text.trim(),
+        timestamp: new Date().toISOString()
+    };
+
+    if (!post.comments) post.comments = [];
+    post.comments.push(newComment);
+    storage.savePosts();
+
+    res.json({ success: true, message: 'Komment əlavə olundu.', comment: newComment });
+});
+
 // API: Admin data overview
 app.get('/api/admin/data', (req, res) => {
     res.json({
@@ -239,7 +336,8 @@ app.get('/api/admin/data', (req, res) => {
         users: storage.data.users,
         campaigns: storage.data.campaigns,
         comments: storage.data.comments,
-        messages: storage.data.messages
+        messages: storage.data.messages,
+        posts: storage.data.posts
     });
 });
 
