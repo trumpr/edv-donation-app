@@ -10,6 +10,42 @@ app.use(express.json({ limit: '15mb' }));
 app.use(cors());
 app.use(express.static(path.join(__dirname)));
 
+// Auto-generate 927 realistic Azerbaijani participants if user count is small
+function generateFakeUsers() {
+    const firstNames = ['Elçin', 'Leyla', 'Orxan', 'Aygün', 'Anar', 'Nigar', 'Rəşad', 'Sevinc', 'Kamran', 'Günel', 'Elnur', 'Vüsalə', 'Murad', 'Fəridə', 'Tural', 'Ləman', 'Samir', 'Aysel', 'Elvin', 'Mədinə', 'Rauf', 'Xəyalə', 'Cavid', 'Zemfira', 'Ülvi', 'Gülşən', 'Fərid', 'Banu', 'Nicat', 'Aytən'];
+    const lastNames = ['Məmmədov', 'Əliyev', 'Hüseynov', 'Qasımov', 'Həsənov', 'Kərimov', 'Əhmədov', 'Rzayev', 'Məmiyov', 'Babayev', 'Quliyev', 'Səfərov', 'Orucov', 'Musayev', 'İbrahimov', 'Əliyeva', 'Məmmədova', 'Hüseynova', 'Qasımova', 'Həsənova'];
+    const regions = ['Bakı', 'Gəncə', 'Sumqayıt', 'Şəki', 'Lənkəran', 'Mingəçevir', 'Quba', 'Şamaxı', 'Gədəbəy', 'Tovuz', 'Qəbələ', 'Şirvan', 'Naxçıvan'];
+
+    let count = Object.keys(storage.data.users).length;
+    if (count < 927) {
+        let added = 0;
+        for (let i = count + 1; i <= 927; i++) {
+            const f = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const l = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const username = `${f}_${l}_${i}`;
+            if (!storage.data.users[username]) {
+                const donations = Math.floor(Math.random() * 25) + 1;
+                storage.data.users[username] = {
+                    pin: '1234',
+                    donationsCount: donations,
+                    points: donations * 10,
+                    hearts: donations,
+                    age: Math.floor(Math.random() * 42) + 18,
+                    region: regions[Math.floor(Math.random() * regions.length)],
+                    avatarBase64: '',
+                    blockedUsers: []
+                };
+                added++;
+            }
+        }
+        if (added > 0) {
+            storage.saveUsers();
+            console.log(`✨ ${added} saxta iştirakçı uğurla yaradıldı! Cəmi: ${Object.keys(storage.data.users).length}`);
+        }
+    }
+}
+generateFakeUsers();
+
 // API: Get campaigns
 app.get('/api/campaigns', (req, res) => {
     res.json(storage.data.campaigns);
@@ -202,7 +238,7 @@ app.post('/api/comments', (req, res) => {
 // API: Get private messages between two users
 app.get('/api/messages', (req, res) => {
     const { user1, user2 } = req.query;
-    if (!user1 || !user2) return res.status(400).json({ success: false, message: 'İstifadəçilər tələb olunur.' });
+    if (!user1 || !user2) return res.status(400).json({ success: false, message: 'İştirakçılar tələb olunur.' });
 
     const u1 = user1.trim().toLowerCase();
     const u2 = user2.trim().toLowerCase();
@@ -623,7 +659,7 @@ app.post('/api/admin/reject-receipt', (req, res) => {
 app.post('/api/admin/delete-folder', (req, res) => {
     const { folderIndex, password } = req.body;
     if (password !== 'admin331234') {
-        return res.status(403).json({ success: false, message: 'Admin parol səhvdir.' });
+        return res.status(403).json({ success: false, message: 'Job failed: Admin parol səhvdir.' });
     }
 
     const FOLDER_SIZE = 100;

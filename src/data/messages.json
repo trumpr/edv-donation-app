@@ -32,5 +32,39 @@
     "isHeartGift": true,
     "read": true,
     "timestamp": "2026-10-10T12:22:45.129Z"
+  },
+  {
+    "id": "1791648934600",
+    "sender": "Mehdi",
+    "receiver": "NEMƏT-GƏNCƏ",
+    "text": "Salam qaqa necesen?",
+    "read": true,
+    "timestamp": "2026-10-10T16:15:34.600Z"
+  },
+  {
+    "id": "1791648973264",
+    "sender": "Mehdi",
+    "receiver": "NEMƏT-GƏNCƏ",
+    "text": "🎁 Mehdi sizə 1 Ürək 💚 hədiyyə göndərdi!",
+    "isHeartGift": true,
+    "read": true,
+    "timestamp": "2026-10-10T16:16:13.264Z"
+  },
+  {
+    "id": "1791648979762",
+    "sender": "Mehdi",
+    "receiver": "NEMƏT-GƏNCƏ",
+    "text": "🎁 Mehdi sizə 1 Ürək 💚 hədiyyə göndərdi!",
+    "isHeartGift": true,
+    "read": true,
+    "timestamp": "2026-10-10T16:16:19.762Z"
+  },
+  {
+    "id": "1791648994483",
+    "sender": "NEMƏT-GƏNCƏ",
+    "receiver": "Mehdi",
+    "text": "Salam sagol sen necesen",
+    "read": true,
+    "timestamp": "2026-10-10T16:16:34.483Z"
   }
 ]
