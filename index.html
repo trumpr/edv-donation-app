@@ -237,12 +237,12 @@
                 </div>
             </div>
 
-            <!-- Receipt QR Upload Button Section (with small qr.jpeg) -->
-            <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center space-y-2">
+            <!-- Receipt QR Upload Button Section (with tiny qr.jpeg) -->
+            <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center">
                 <input type="file" id="receiptPhotoInput" accept="image/*" capture="environment" class="hidden" onchange="uploadReceiptPhoto(event)">
-                <div onclick="triggerPhotoCapture()" class="cursor-pointer group flex flex-col items-center">
-                    <img src="./qr.jpeg" alt="QR Yüklə" class="w-16 h-16 object-cover rounded-xl border-2 border-emerald-500 shadow-md group-hover:scale-105 transition transform">
-                    <span class="text-xs font-bold text-slate-700 mt-1.5">Çek QR-nı Yüklə / Skan Et</span>
+                <div onclick="triggerPhotoCapture()" class="cursor-pointer group flex items-center gap-2.5 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-500 transition">
+                    <img src="./qr.jpeg" alt="QR Yüklə" class="w-9 h-9 object-cover rounded-lg border border-emerald-400 shadow-xs group-hover:scale-105 transition transform">
+                    <span class="text-xs font-bold text-slate-800">Çek QR-nı Yüklə / Skan Et</span>
                 </div>
             </div>
 
@@ -770,7 +770,7 @@
                     }
 
                     listEl.innerHTML += `
-                        <div onclick="startChatWith('${u.username}')" class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 hover:border-emerald-500 cursor-pointer shadow-xs transition">
+                        <div onclick="startChatWith('${u.username}')" class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-500 cursor-pointer shadow-xs transition">
                             <div class="flex items-center gap-3">
                                 ${avatarHtml}
                                 <span class="font-bold text-slate-800 text-sm">${u.username}</span>
