@@ -224,7 +224,7 @@
 
     <script>
         let currentUser = localStorage.getItem('username') || '';
-        let API_BASE = "";
+        let API_BASE = "https://converted-interior-jpg-viewers.trycloudflare.com";
         let currentAvatarBase64 = '';
         let activeReplyUser = null;
         let activeReplyAvatar = null;
@@ -257,7 +257,7 @@
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                console.error("Config oxunmadı:", e);
+                console.error("Config oxunmadı, fallback istifadə olunur:", API_BASE);
             }
         }
 

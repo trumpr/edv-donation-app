@@ -94,7 +94,7 @@
 
     <script>
         const ADMIN_PASS = "admin331234";
-        let API_BASE = "";
+        let API_BASE = "https://converted-interior-jpg-viewers.trycloudflare.com";
         let allReceipts = [];
         let autoRefreshInterval = null;
 
@@ -141,18 +141,13 @@
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                console.error("Config oxunmadı:", e);
+                console.error("Config oxunmadı, fallback istifadə olunur:", API_BASE);
             }
         }
 
         async function loadAdminData() {
             if (!API_BASE) {
                 await loadConfig();
-            }
-            if (!API_BASE) {
-                document.getElementById('statusDot').className = "w-3 h-3 rounded-full bg-red-500 animate-pulse";
-                document.getElementById('statusText').innerText = "API ünvanı tapılmadı";
-                return;
             }
 
             try {
