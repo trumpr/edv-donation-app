@@ -137,29 +137,15 @@
                 </div>
             </div>
 
-            <!-- Receipts Folders & Table -->
+            <!-- Receipts Collapsible Folders Section -->
             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden space-y-2">
                 <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
                     <h2 class="font-bold text-slate-800 text-xs">📸 Göndərilən Çek Qovluqları (Hərəsində 100 ədəd)</h2>
                     <button onclick="clearAllReceipts()" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-200 transition">🗑️ Çekləri Təmizlə</button>
                 </div>
-                <!-- Folders Navigation Bar -->
-                <div id="receiptFoldersBar" class="flex gap-2 overflow-x-auto p-3 bg-slate-100/70 border-b">
-                    <!-- Folder tabs loaded dynamically -->
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-100 text-slate-600 uppercase text-[10px]">
-                            <tr>
-                                <th class="p-2.5">Vaxt</th>
-                                <th class="p-2.5">İştirakçı</th>
-                                <th class="p-2.5">Çek Şəkli</th>
-                            </tr>
-                        </thead>
-                        <tbody id="receiptsTableBody" class="divide-y divide-slate-200">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
+                <!-- Folders Accordion Container -->
+                <div id="receiptFoldersAccordion" class="p-4 space-y-3">
+                    <!-- Loaded dynamically -->
                 </div>
             </div>
         </main>
@@ -178,7 +164,7 @@
         let allUsers = {};
         let adminPostImageBase64 = '';
         let autoRefreshInterval = null;
-        let activeReceiptFolder = 0;
+        let openFolderIndex = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadConfig();
@@ -504,7 +490,7 @@
                     });
                 }
 
-                // Render Receipts Folders & Table
+                // Render collapsible receipt folders accordion
                 renderAdminReceipts();
             } catch (e) {
                 // Turn status indicator RED
@@ -515,12 +501,11 @@
         }
 
         function renderAdminReceipts() {
-            const foldersBar = document.getElementById('receiptFoldersBar');
-            const tbody = document.getElementById('receiptsTableBody');
+            const container = document.getElementById('receiptFoldersAccordion');
+            if (!container) return;
 
             if (allReceipts.length === 0) {
-                if (foldersBar) foldersBar.innerHTML = '';
-                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Hələ heç bir çek şəkli göndərilməyib.</td></tr>`;
+                container.innerHTML = '<p class="text-slate-400 italic text-xs text-center py-4">Hələ heç bir çek şəkli göndərilməyib.</p>';
                 return;
             }
 
@@ -534,47 +519,66 @@
                 });
             }
 
-            if (activeReceiptFolder >= folders.length) {
-                activeReceiptFolder = 0;
-            }
+            container.innerHTML = '';
+            folders.forEach((f, fIdx) => {
+                const isOpen = openFolderIndex === fIdx;
+                const arrowIcon = isOpen ? '▲' : '▼';
+                const contentClass = isOpen ? 'block' : 'hidden';
 
-            // Render folders tabs
-            if (foldersBar) {
-                foldersBar.innerHTML = '';
-                folders.forEach((f, fIdx) => {
-                    const isActive = fIdx === activeReceiptFolder;
-                    const btnClass = isActive ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 hover:bg-slate-100 border';
-                    foldersBar.innerHTML += `
-                        <button onclick="activeReceiptFolder = ${fIdx}; renderAdminReceipts();" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${btnClass}">
-                            📁 Qovluq ${fIdx + 1} (${f.start}-${f.end})
-                        </button>
+                let rowsHtml = '';
+                f.items.slice().reverse().forEach((r, idx) => {
+                    const actualIndex = (fIdx * FOLDER_SIZE) + (f.items.length - 1 - idx);
+                    const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = new Date(r.timestamp).toLocaleDateString();
+
+                    let receiptMedia = `<span class="text-xs text-slate-400 italic">Şəkil yoxdur</span>`;
+                    if (r.imageBase64) {
+                        receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal(${actualIndex})" class="w-12 h-12 object-cover rounded-lg border bg-white p-0.5 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
+                    }
+
+                    rowsHtml += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-2 text-slate-500 whitespace-nowrap">${dateStr} ${timeStr}</td>
+                            <td class="p-2 font-bold text-slate-800">${r.username}</td>
+                            <td class="p-2">${receiptMedia}</td>
+                        </tr>
                     `;
                 });
-            }
 
-            tbody.innerHTML = '';
-            const currentFolderItems = folders[activeReceiptFolder] ? folders[activeReceiptFolder].items : [];
-
-            currentFolderItems.slice().reverse().forEach((r, idx) => {
-                const actualIndex = (activeReceiptFolder * FOLDER_SIZE) + (currentFolderItems.length - 1 - idx);
-                const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const dateStr = new Date(r.timestamp).toLocaleDateString();
-
-                let receiptMedia = `<span class="text-xs text-slate-400 italic">Şəkil yoxdur</span>`;
-                if (r.imageBase64) {
-                    receiptMedia = `<img src="${r.imageBase64}" alt="Çek" onclick="openImageModal(${actualIndex})" class="w-14 h-14 object-cover rounded-lg border bg-white p-0.5 shrink-0 shadow-sm cursor-pointer hover:scale-105 transition transform" title="Böyütmək üçün basın">`;
-                }
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-2.5 text-slate-500 whitespace-nowrap">${dateStr} ${timeStr}</td>
-                        <td class="p-2.5 font-bold text-slate-800">${r.username}</td>
-                        <td class="p-2.5">
-                            ${receiptMedia}
-                        </td>
-                    </tr>
+                container.innerHTML += `
+                    <div class="border rounded-xl overflow-hidden bg-slate-50 shadow-xs">
+                        <button onclick="toggleFolder(${fIdx})" class="w-full p-3.5 bg-white hover:bg-slate-50 flex justify-between items-center font-bold text-xs text-slate-800 transition">
+                            <span class="flex items-center gap-2">
+                                <span>📁</span> Qovluq ${fIdx + 1} <span class="text-slate-500 font-normal">(${f.start} - ${f.end} çek)</span>
+                            </span>
+                            <span class="text-slate-400">${arrowIcon}</span>
+                        </button>
+                        <div id="folderContent_${fIdx}" class="${contentClass} border-t bg-white overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-600 uppercase text-[10px]">
+                                    <tr>
+                                        <th class="p-2">Vaxt</th>
+                                        <th class="p-2">İştirakçı</th>
+                                        <th class="p-2">Çek Şəkli</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    ${rowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 `;
             });
+        }
+
+        function toggleFolder(fIdx) {
+            if (openFolderIndex === fIdx) {
+                openFolderIndex = null; // close
+            } else {
+                openFolderIndex = fIdx; // open this one
+            }
+            renderAdminReceipts();
         }
 
         async function clearAllReceipts() {
@@ -586,7 +590,7 @@
                 const data = await res.json();
                 if (data.success) {
                     alert('Bütün çeklər təmizləndi.');
-                    activeReceiptFolder = 0;
+                    openFolderIndex = null;
                     loadAdminData();
                 } else {
                     alert('Xəta baş verdi.');
