@@ -46,19 +46,19 @@
                         Daxil olunmayıb
                     </div>
                     <div class="space-y-2 pt-2">
-                        <button onclick="toggleHamburgerMenu(); openManifestoModal()" class="w-full text-left bg-indigo-50 hover:bg-indigo-100 text-indigo-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
+                        <button onclick="openManifestoModal()" class="w-full text-left bg-indigo-50 hover:bg-indigo-100 text-indigo-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
                             <span>📜</span> Yaşıl Ürək haqqında və Məqsədlər
                         </button>
-                        <button onclick="toggleHamburgerMenu(); openProfileModal()" class="w-full text-left bg-emerald-50 hover:bg-emerald-100 text-emerald-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
+                        <button onclick="openProfileModal()" class="w-full text-left bg-emerald-50 hover:bg-emerald-100 text-emerald-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
                             <span>👤</span> Profil
                         </button>
-                        <button onclick="toggleHamburgerMenu(); openChatModal()" class="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
+                        <button onclick="openChatModal()" class="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
                             <span>📩</span> Mesajlar
                         </button>
-                        <button onclick="toggleHamburgerMenu(); openParticipantsModal()" class="w-full text-left bg-amber-50 hover:bg-amber-100 text-amber-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
+                        <button onclick="openParticipantsModal()" class="w-full text-left bg-amber-50 hover:bg-amber-100 text-amber-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
                             <span>👥</span> İştirakçılar və Axtarış
                         </button>
-                        <button onclick="toggleHamburgerMenu(); openCampaignsModal()" class="w-full text-left bg-teal-50 hover:bg-teal-100 text-teal-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
+                        <button onclick="openCampaignsModal()" class="w-full text-left bg-teal-50 hover:bg-teal-100 text-teal-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
                             <span>📊</span> Aktiv Kampaniyalar və İlerleme
                         </button>
                     </div>
@@ -426,7 +426,7 @@
         }
 
         // Dummy fetchRecent to prevent any errors if called
-        function fetchRecent() {}
+        function fetchResent() {}
 
         function toggleHamburgerMenu() {
             const modal = document.getElementById('hamburgerMenuModal');
@@ -449,8 +449,7 @@
         }
 
         function openCampaignsModal() {
-            document.getElementById('campaignsModal').classList.remove('hidden');
-            renderCampaignsModalList();
+            document.getElementById('campaignsModal').classList.add('hidden');
         }
 
         function closeCampaignsModal() {
@@ -601,6 +600,7 @@
         }
 
         function openProfileModal() {
+            document.getElementById('hamburgerMenuModal').classList.add('hidden');
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             document.getElementById('profileModal').classList.remove('hidden');
             fetchUserStats().then(data => {
@@ -841,7 +841,7 @@
         async function toggleLike(postId) {
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             try {
-                const res = await fetch(API_BASE + '/api/posts/${postId}/like`, {
+                const res = await fetch(API_BASE + `/api/posts/${postId}/like`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: currentUser })
@@ -880,6 +880,7 @@
 
         // Chat & Participants Functions
         function openChatModal() {
+            document.getElementById('hamburgerMenuModal').classList.add('hidden');
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             document.getElementById('chatModal').classList.remove('hidden');
             document.getElementById('msgNotificationBadge').classList.add('hidden');
