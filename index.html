@@ -39,12 +39,33 @@
                         <button onclick="toggleHamburgerMenu(); openChatModal()" class="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
                             <span>📩</span> Mesajlar
                         </button>
+                        <button onclick="toggleHamburgerMenu(); openParticipantsModal()" class="w-full text-left bg-amber-50 hover:bg-amber-100 text-amber-900 px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 transition">
+                            <span>👥</span> İştirakçılar və Axtarış
+                        </button>
                     </div>
                 </div>
                 <div>
                     <button onclick="toggleHamburgerMenu(); logout()" class="w-full bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition">
                         <span>🚪</span> Çıxış
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Participants Modal -->
+        <div id="participantsModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col h-[80vh] overflow-hidden p-5 space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span>👥</span> İştirakçılar və Axtarış
+                    </h2>
+                    <button onclick="closeParticipantsModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+                </div>
+                <div>
+                    <input type="text" id="participantSearchInput" placeholder="İştirakçı adını axtar..." oninput="filterParticipants()" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm bg-slate-50">
+                </div>
+                <div id="participantsList" class="space-y-2 flex-1 overflow-y-auto">
+                    <!-- Loaded dynamically -->
                 </div>
             </div>
         </div>
@@ -187,19 +208,6 @@
                 </div>
             </div>
 
-            <!-- Participants Search Section -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span>👥</span> İştirakçılar və Axtarış
-                </h2>
-                <div>
-                    <input type="text" id="participantSearchInput" placeholder="İştirakçı adını axtar..." oninput="filterParticipants()" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm bg-slate-50">
-                </div>
-                <div id="participantsList" class="space-y-2 max-h-60 overflow-y-auto">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
-
             <!-- Leaderboard & Recent Activity Tabs -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <!-- Top Donors -->
@@ -303,6 +311,15 @@
             } else {
                 statusEl.innerHTML = `Daxil olunmayıb`;
             }
+        }
+
+        function openParticipantsModal() {
+            document.getElementById('participantsModal').classList.remove('hidden');
+            fetchParticipants();
+        }
+
+        function closeParticipantsModal() {
+            document.getElementById('participantsModal').classList.add('hidden');
         }
 
         async function loginUser() {
@@ -532,6 +549,7 @@
         function openChatWithUser(username) {
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             if (username.toLowerCase() === currentUser.toLowerCase()) return alert('Özünüzə mesaj yaza bilməzsiniz.');
+            closeParticipantsModal();
             document.getElementById('chatModal').classList.remove('hidden');
             document.getElementById('msgNotificationBadge').classList.add('hidden');
             startChatWith(username);
