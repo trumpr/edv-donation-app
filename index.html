@@ -290,7 +290,7 @@
                     API_BASE = config.apiUrl;
                 }
             } catch (e) {
-                console.error("Config oxunmadı:", e);
+                console.error("Config oxunmadı, fallback istifadə olunur:", API_BASE);
             }
         }
 
@@ -455,7 +455,7 @@
             }
         }
 
-        // --- Social Feed & Posts ---
+        // --- Social Feed & Posts (with object-contain) ---
         async function fetchPosts() {
             try {
                 const res = await fetch(API_BASE + '/api/posts');
@@ -481,7 +481,7 @@
 
                 let imageHtml = '';
                 if (post.imageBase64) {
-                    imageHtml = `<div class="bg-slate-50 rounded-xl overflow-hidden border"><img src="${post.imageBase64}" class="w-full max-h-72 object-cover"></div>`;
+                    imageHtml = `<div class="bg-slate-900 rounded-xl overflow-hidden border flex items-center justify-center max-h-96 p-2"><img src="${post.imageBase64}" class="w-full max-h-96 object-contain rounded"></div>`;
                 }
 
                 let commentsHtml = '';
