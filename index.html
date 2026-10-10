@@ -13,7 +13,7 @@
             <button onclick="openManifestoModal()" class="bg-emerald-900 hover:bg-emerald-950 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow flex items-center gap-1.5 shrink-0">
                 <span>ℹ️</span> ƏDV haqqında
             </button>
-            <span class="text-lg">💚</span>
+            <span class="text-xs font-extrabold text-emerald-100 tracking-wide">Yaşıl Ürək 💚</span>
             <button onclick="toggleHamburgerMenu()" class="bg-emerald-900 hover:bg-emerald-950 text-white p-2.5 rounded-xl transition flex items-center justify-center shadow shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -1135,7 +1135,7 @@
 
             allCampaigns.forEach(c => {
                 const percent = Math.min(Math.round((c.current / c.target) * 100), 100);
-                listEl.innerHTML += `
+                list_el.innerHTML += `
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
                         <h3 class="font-bold text-slate-800 text-sm">${c.title}</h3>
                         <p class="text-xs text-slate-600">${c.description}</p>
