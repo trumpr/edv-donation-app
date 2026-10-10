@@ -374,16 +374,6 @@
                     <!-- Posts loaded dynamically -->
                 </div>
             </div>
-
-            <!-- Recent Activity Tab -->
-            <div class="bg-teal-50 p-4 rounded-2xl border border-teal-200 shadow-sm">
-                <h3 class="font-bold text-teal-900 mb-3 flex items-center gap-2 text-sm">
-                    <span>⚡</span> Son Göndərilən Çeklər
-                </h3>
-                <div id="recentList" class="space-y-2 text-xs">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
         </main>
 
         <!-- Footer -->
@@ -414,7 +404,6 @@
             }
             fetchCampaigns();
             fetchLeaderboard();
-            fetchRecent();
             fetchParticipants();
             fetchPosts();
             startNotificationPolling();
@@ -576,7 +565,6 @@
                     showProfile();
                     fetchUserStats();
                     fetchLeaderboard();
-                    fetchRecent();
                     fetchParticipants();
                     startNotificationPolling();
                 } else {
@@ -1331,7 +1319,6 @@
                             event.target.value = '';
                             fetchUserStats();
                             fetchLeaderboard();
-                            fetchRecent();
                         } else {
                             alert('Xəta: ' + data.message);
                         }
@@ -1441,30 +1428,6 @@
                 });
                 avatarsRowHtml += `</div>`;
                 listEl.innerHTML = avatarsRowHtml;
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        async function fetchRecent() {
-            try {
-                const res = await fetch(API_BASE + '/api/recent');
-                const recent = await res.json();
-                const listEl = document.getElementById('recentList');
-                listEl.innerHTML = '';
-                if (recent.length === 0) {
-                    listEl.innerHTML = '<p class="text-teal-700 italic">Hələ çek şəkli göndərilməyib.</p>';
-                    return;
-                }
-                recent.forEach(r => {
-                    const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    listEl.innerHTML += `
-                        <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-teal-100 shadow-xs">
-                            <span class="font-medium text-teal-900">${r.username} (Çek şəkli qeydə alındı)</span>
-                            <span class="text-slate-400">${timeStr}</span>
-                        </div>
-                    `;
-                });
             } catch (e) {
                 console.error(e);
             }

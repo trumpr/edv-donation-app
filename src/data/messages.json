@@ -14,5 +14,23 @@
     "text": "Salam necesiz?",
     "read": true,
     "timestamp": "2026-10-10T11:57:47.460Z"
+  },
+  {
+    "id": "1791634957650",
+    "sender": "aygun",
+    "receiver": "Mehdi",
+    "text": "🎁 aygun sizə 1 Ürək 💚 hədiyyə göndərdi!",
+    "isHeartGift": true,
+    "read": true,
+    "timestamp": "2026-10-10T12:22:37.650Z"
+  },
+  {
+    "id": "1791634965128",
+    "sender": "aygun",
+    "receiver": "Mehdi",
+    "text": "🎁 aygun sizə 1 Ürək 💚 hədiyyə göndərdi!",
+    "isHeartGift": true,
+    "read": true,
+    "timestamp": "2026-10-10T12:22:45.129Z"
   }
 ]
