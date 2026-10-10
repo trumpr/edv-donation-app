@@ -397,6 +397,7 @@
             fetchRecent();
             fetchParticipants();
             fetchPosts();
+            startNotificationPolling();
         });
 
         async function loadConfig() {
@@ -936,6 +937,18 @@
             try {
                 const res = await fetch(API_BASE + '/api/leaderboard');
                 const users = await res.json();
+
+                // Fetch unread messages to highlight senders
+                const unreadRes = await fetch(API_BASE + `/api/unread?username=${currentUser}`);
+                const unreadData = await unreadRes.json();
+                const unreadSenders = {};
+                if (unreadData.messages) {
+                    unreadData.messages.forEach(m => {
+                        const s = m.sender.toLowerCase();
+                        unreadSenders[s] = (unreadSenders[s] || 0) + 1;
+                    });
+                }
+
                 const listEl = document.getElementById('chatUserList');
                 listEl.innerHTML = '';
 
@@ -951,13 +964,20 @@
                         avatarHtml = `<img src="${u.avatarBase64}" class="w-8 h-8 rounded-full object-cover shrink-0">`;
                     }
 
+                    const unreadCount = unreadSenders[u.username.toLowerCase()] || 0;
+                    const badgeHtml = unreadCount > 0 ? `<span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-extrabold animate-bounce">${unreadCount} yeni mesaj</span>` : '';
+                    const borderStyle = unreadCount > 0 ? 'border-red-400 bg-red-50/50' : 'border-slate-200 bg-white';
+
                     listEl.innerHTML += `
-                        <div onclick="startChatWith('${u.username}')" class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 hover:border-emerald-500 cursor-pointer shadow-xs transition">
+                        <div onclick="startChatWith('${u.username}')" class="flex items-center justify-between ${borderStyle} p-3 rounded-xl border hover:border-emerald-500 cursor-pointer shadow-xs transition">
                             <div class="flex items-center gap-3">
                                 ${avatarHtml}
                                 <span class="font-bold text-slate-800 text-sm">${u.username}</span>
                             </div>
-                            <span class="text-xs text-emerald-600 font-semibold">Mesaj yaz 💬</span>
+                            <div class="flex items-center gap-2">
+                                ${badgeHtml}
+                                <span class="text-xs text-emerald-600 font-semibold">Çat 💬</span>
+                            </div>
                         </div>
                     `;
                 });
@@ -1002,16 +1022,16 @@
 
                 messages.forEach(m => {
                     const isMe = m.sender.toLowerCase() === currentUser.toLowerCase();
-                    const bubbleAlign = isMe ? 'ml-auto bg-emerald-600 text-white rounded-2xl rounded-tr-xs' : 'mr-auto bg-white text-slate-800 border rounded-2xl rounded-tl-xs';
+                    const bubbleAlign = isMe ? 'ml-auto bg-emerald-600 text-white rounded-2xl rounded-tr-xs' : 'mr-auto bg-white text-slate-800 border border-emerald-200 rounded-2xl rounded-tl-xs';
                     const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const senderLabel = !isMe ? `<p class="font-bold text-[10px] text-emerald-700 mb-1">${escapeHtml(m.sender)}</p>` : '';
+                    const senderLabel = !isMe ? `<div class="flex items-center gap-1.5 font-extrabold text-xs text-emerald-900 mb-1 border-b border-emerald-100 pb-1"><span>👤 Kimdən:</span><span>${escapeHtml(m.sender)}</span></div>` : '';
                     const blueTicks = isMe ? `<span class="text-blue-300 font-extrabold ml-1 tracking-tighter" title="Oxundu">✓✓</span>` : '';
 
                     listEl.innerHTML += `
-                        <div class="max-w-[80%] ${bubbleAlign} p-3 text-xs space-y-1 shadow-sm">
+                        <div class="max-w-[85%] ${bubbleAlign} p-3 text-xs space-y-1 shadow-sm">
                             ${senderLabel}
-                            <p class="whitespace-pre-line leading-relaxed">${escapeHtml(m.text)}</p>
-                            <div class="flex items-center justify-end gap-1 pt-0.5">
+                            <p class="whitespace-pre-line leading-relaxed text-slate-900">${escapeHtml(m.text)}</p>
+                            <div class="flex items-center justify-end gap-1 pt-1 border-t border-slate-100/50">
                                 <span class="text-[9px] ${isMe ? 'text-emerald-200' : 'text-slate-400'}">${timeStr}</span>
                                 ${blueTicks}
                             </div>
@@ -1049,7 +1069,7 @@
                     alert('Xəta: ' + data.message);
                 }
             } catch (e) {
-                alert('Mesaj göndərilərkən xəta baş verdi.');
+                alert('Mesaj göndərərkən xəta baş verdi.');
             }
         }
 
@@ -1105,7 +1125,7 @@
                         const data = await res.json();
                         if (data.success) {
                             alert(data.message);
-                            event.target.value = '';
+                            event.target.value, event.target.value = '';
                             fetchUserStats();
                             fetchLeaderboard();
                             fetchRecent();
@@ -1234,7 +1254,7 @@
                     return;
                 }
                 recent.forEach(r => {
-                    const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const timeStr = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'}},
                     listEl.innerHTML += `
                         <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-teal-100 shadow-xs">
                             <span class="font-medium text-teal-900">${r.username} (Çek şəkli qeydə alındı)</span>
