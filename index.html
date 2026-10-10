@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çek Fondu - EDV ilə Dəstək Ol</title>
+    <title>Yaşıl Ürək - Çek İanə və Ekologiya Platforması</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans pb-10">
@@ -39,7 +39,7 @@
             <div class="bg-white w-72 h-full shadow-2xl p-6 flex flex-col justify-between space-y-6" onclick="event.stopPropagation()">
                 <div class="space-y-4">
                     <div class="flex justify-between items-center border-b pb-3">
-                        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><span>⚙️</span> Menyü</h3>
+                        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><span>⚙️</span> Yaşıl Ürək Menyü</h3>
                         <button onclick="toggleHamburgerMenu()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
                     </div>
                     <div id="hamburgerUserStatus" class="text-xs text-slate-600 font-medium bg-slate-50 p-3 rounded-xl border">
@@ -368,7 +368,7 @@
             <!-- Admin Posts & Social Feed Section -->
             <div class="space-y-4">
                 <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span>📢</span> Admin Paylaşımları və Xəbərlər
+                    <span>📢</span> Yaşıl Ürək Elanları və Xəbərlər
                 </h2>
                 <div id="postsFeedList" class="space-y-5">
                     <!-- Posts loaded dynamically -->
@@ -378,7 +378,7 @@
 
         <!-- Footer -->
         <footer class="bg-slate-100 p-4 text-center text-xs text-slate-500 border-t mt-4">
-            &copy; 2026 Çek İanə və EDV Platforması. Bütün hüquqlar qorunur.
+            &copy; 2026 Yaşıl Ürək Platforması. Bütün hüquqlar qorunur.
         </footer>
     </div>
 
@@ -424,6 +424,9 @@
                 console.error("Config oxunmadı, sərt yazılmış API_BASE istifadə olunur:", e);
             }
         }
+
+        // Dummy fetchRecent to prevent any errors if called
+        function fetchRecent() {}
 
         function toggleHamburgerMenu() {
             const modal = document.getElementById('hamburgerMenuModal');
@@ -504,7 +507,10 @@
                 rankBanner.classList.add('hidden');
             }
 
-            users.forEach((u, index) => {
+            // Limit to top 100 to prevent browser freeze with 927 users
+            const displayUsers = users.slice(0, 100);
+
+            displayUsers.forEach((u, index) => {
                 let badge = `#${index + 1}`;
                 if (index === 0) badge = '🥇 1';
                 else if (index === 1) badge = '🥈 2';
@@ -537,6 +543,10 @@
                     </div>
                 `;
             });
+
+            if (users.length > 100) {
+                listEl.innerHTML += `<p class="text-[11px] text-slate-400 italic text-center py-2">Və digər ${users.length - 100} iştirakçı (Axtarışdan istifadə edin)</p>`;
+            }
         }
 
         function filterLeaderboardModal() {
@@ -712,7 +722,7 @@
                 listEl.innerHTML += `
                     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                         <div class="flex justify-between items-center text-xs text-slate-400">
-                            <span class="font-bold text-slate-900">👑 Admin Elanı</span>
+                            <span class="font-bold text-slate-900">👑 Yaşıl Ürək Elanı</span>
                             <span>${timeStr}</span>
                         </div>
                         <p class="font-bold text-slate-800 text-sm whitespace-pre-line">${escapeHtml(post.title)}</p>
@@ -831,7 +841,7 @@
         async function toggleLike(postId) {
             if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
             try {
-                const res = await fetch(API_BASE + `/api/posts/${postId}/like`, {
+                const res = await fetch(API_BASE + '/api/posts/${postId}/like`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: currentUser })
@@ -1133,303 +1143,6 @@
                 fetchChatUsers();
             } catch (e) {
                 alert('Söhbət silinərkən xəta baş verdi.');
-            }
-        }
-
-        async function sendHeartGift() {
-            if (!currentUser || !activeChatUser) return;
-            if (!confirm(`"${activeChatUser}" adlı iştirakçıya 1 Ürək 💚 hədiyyə göndərmək istəyirsiniz?`)) return;
-
-            try {
-                const res = await fetch(API_BASE + '/api/messages/send-heart', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sender: currentUser, receiver: activeChatUser })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert(data.message);
-                    fetchMessages();
-                    fetchUserStats();
-                } else {
-                    alert('Xəta: ' + data.message);
-                }
-            } catch (e) {
-                alert('Ürək göndərilərkən xəta baş verdi.');
-            }
-        }
-
-        async function fetchMessages() {
-            if (!activeChatUser || !currentUser) return;
-            try {
-                const res = await fetch(API_BASE + `/api/messages?user1=${currentUser}&user2=${activeChatUser}`);
-                const messages = await res.json();
-                const listEl = document.getElementById('chatMessagesList');
-                listEl.innerHTML = '';
-
-                if (messages.length === 0) {
-                    listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center my-auto">Hələ ki, mesaj yoxdur. İlk mesajı siz yazın!</p>';
-                    return;
-                }
-
-                messages.forEach(m => {
-                    const isMe = m.sender.toLowerCase() === currentUser.toLowerCase();
-                    const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                    if (m.isHeartGift) {
-                        listEl.innerHTML += `
-                            <div class="mx-auto my-2 bg-emerald-100 border border-emerald-300 text-emerald-900 rounded-xl p-2.5 text-xs text-center shadow-xs max-w-[90%] font-bold space-y-0.5">
-                                <p>💚 ${escapeHtml(m.text)}</p>
-                                <span class="text-[9px] text-emerald-700 block">${timeStr}</span>
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    const bubbleAlign = isMe ? 'ml-auto bg-[#005c4b] text-white rounded-2xl rounded-tr-xs' : 'mr-auto bg-white text-slate-900 border border-slate-200 rounded-2xl rounded-tl-xs';
-                    const senderLabel = !isMe ? `<div class="font-extrabold text-[11px] text-[#00a884] mb-1">${escapeHtml(m.sender)}</div>` : '';
-
-                    let ticks = '';
-                    if (isMe) {
-                        if (m.read) {
-                            ticks = `<span class="text-sky-400 font-extrabold ml-1 tracking-tighter" title="Oxundu">✓✓</span>`;
-                        } else {
-                            ticks = `<span class="text-slate-400 font-extrabold ml-1 tracking-tighter" title="Çatdırıldı">✓</span>`;
-                        }
-                    }
-
-                    listEl.innerHTML += `
-                        <div class="max-w-[85%] ${bubbleAlign} p-3 text-xs space-y-1 shadow-sm">
-                            ${senderLabel}
-                            <p class="whitespace-pre-line leading-relaxed">${escapeHtml(m.text)}</p>
-                            <div class="flex items-center justify-end gap-1 pt-0.5">
-                                <span class="text-[9px] ${isMe ? 'text-emerald-200' : 'text-slate-400'}">${timeStr}</span>
-                                ${ticks}
-                            </div>
-                        </div>
-                    `;
-                });
-                listEl.scrollTop = listEl.scrollHeight;
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        // --- Optimistic UI for Super Fast Instant Messaging ---
-        async function sendPrivateMessage() {
-            if (!currentUser || !activeChatUser) return;
-            const textInput = document.getElementById('chatMessageInput');
-            const text = textInput.value.trim();
-            if (!text) return;
-
-            // Instant Optimistic Append
-            const listEl = document.getElementById('chatMessagesList');
-            if (listEl.querySelector('p.italic')) {
-                listEl.innerHTML = '';
-            }
-            const tempTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            listEl.innerHTML += `
-                <div class="max-w-[85%] ml-auto bg-[#005c4b] text-white rounded-2xl rounded-tr-xs p-3 text-xs space-y-1 shadow-sm">
-                    <p class="whitespace-pre-line leading-relaxed">${escapeHtml(text)}</p>
-                    <div class="flex items-center justify-end gap-1 pt-0.5">
-                        <span class="text-[9px] text-emerald-200">${tempTime}</span>
-                        <span class="text-slate-400 font-extrabold ml-1 tracking-tighter">✓</span>
-                    </div>
-                </div>
-            `;
-            listEl.scrollTop = listEl.scrollHeight;
-            textInput.value = '';
-
-            try {
-                const res = await fetch(API_BASE + '/api/messages', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sender: currentUser,
-                        receiver: activeChatUser,
-                        text
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    fetchMessages();
-                    fetchUserStats();
-                } else {
-                    alert('Xəta: ' + data.message);
-                    fetchMessages();
-                }
-            } catch (e) {
-                alert('Mesaj göndərərkən xəta baş verdi.');
-                fetchMessages();
-            }
-        }
-
-        function triggerPhotoCapture() {
-            if (!currentUser) return alert('Zəhmət olmasa əvvəlcə daxil olun!');
-            document.getElementById('receiptPhotoInput').click();
-        }
-
-        function uploadReceiptPhoto(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = async function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 600;
-                    const MAX_HEIGHT = 600;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
-
-                    try {
-                        const res = await fetch(API_BASE + '/api/donate', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                username: currentUser,
-                                campaignId: "1",
-                                qrData: 'Çek Şəkli',
-                                imageBase64: compressedBase64
-                            })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            alert(data.message);
-                            event.target.value = '';
-                            fetchUserStats();
-                            fetchLeaderboard();
-                        } else {
-                            alert('Xəta: ' + data.message);
-                        }
-                    } catch (err) {
-                        alert('Şəkil göndərilərkən xəta baş verdi: ' + err.message);
-                    }
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function fetchCampaigns() {
-            try {
-                const res = await fetch(API_BASE + '/api/campaigns');
-                allCampaigns = await res.json();
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        function renderCampaignsModalList() {
-            const listEl = document.getElementById('campaignsModalList');
-            listEl.innerHTML = '';
-            if (allCampaigns.length === 0) {
-                listEl.innerHTML = '<p class="text-slate-400 italic text-xs text-center">Kampaniya tapılmadı.</p>';
-                return;
-            }
-
-            allCampaigns.forEach(c => {
-                const percent = Math.min(Math.round((c.current / c.target) * 100), 100);
-                listEl.innerHTML += `
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                        <h3 class="font-bold text-slate-800 text-sm">${c.title}</h3>
-                        <p class="text-xs text-slate-600">${c.description}</p>
-                        <div>
-                            <div class="flex justify-between text-xs font-semibold mb-1 text-slate-700">
-                                <span>Yığılıb: ${c.current} çek</span>
-                                <span>Hədəf: ${c.target} çek (${percent}%)</span>
-                            </div>
-                            <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden border">
-                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        async function fetchUserStats() {
-            if (!currentUser) return null;
-            try {
-                const res = await fetch(API_BASE + `/api/user/${currentUser}`);
-                const data = await res.json();
-                document.getElementById('userPoints').innerText = data.points || 0;
-                document.getElementById('userDonations').innerText = data.donationsCount || 0;
-                const heartsEl = document.getElementById('userHearts');
-                if (heartsEl) heartsEl.innerText = (data.hearts !== undefined ? data.hearts : data.donationsCount || 0) + ' 💚';
-
-                const avatarEl = document.getElementById('headerAvatar');
-                if (data.avatarBase64) {
-                    avatarEl.innerHTML = `<img src="${data.avatarBase64}" class="w-full h-full object-cover">`;
-                } else {
-                    avatarEl.innerText = currentUser.charAt(0).toUpperCase();
-                }
-                return data;
-            } catch (e) {
-                console.error(e);
-                return null;
-            }
-        }
-
-        async function fetchLeaderboard() {
-            try {
-                const res = await fetch(API_BASE + '/api/leaderboard');
-                const users = await res.json();
-                const listEl = document.getElementById('leaderboardList');
-                listEl.innerHTML = '';
-                if (users.length === 0) {
-                    listEl.innerHTML = '<p class="text-amber-700 italic text-xs">Hələ iştirakçı yoxdur.</p>';
-                    return;
-                }
-
-                const top10 = users.slice(0, 10);
-                let avatarsRowHtml = `<div class="flex gap-3 overflow-x-auto pb-2 pt-1">`;
-                top10.forEach((u, index) => {
-                    let badge = `#${index + 1}`;
-                    if (index === 0) badge = '🥇';
-                    else if (index === 1) badge = '🥈';
-                    else if (index === 2) badge = '🥉';
-
-                    let avatarHtml = `<div class="w-12 h-12 rounded-full bg-amber-200 text-amber-900 font-bold flex items-center justify-center text-sm shadow-inner">${u.username.charAt(0).toUpperCase()}</div>`;
-                    if (u.avatarBase64) {
-                        avatarHtml = `<img src="${u.avatarBase64}" class="w-12 h-12 rounded-full object-cover shadow">`;
-                    }
-
-                    avatarsRowHtml += `
-                        <div class="flex flex-col items-center shrink-0 cursor-pointer" onclick="openLeaderboardModal()" title="${u.username} (${u.points} xal)">
-                            <div class="relative">
-                                ${avatarHtml}
-                                <span class="absolute -bottom-1 -right-1 bg-amber-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow">${badge}</span>
-                            </div>
-                            <span class="text-[10px] font-bold text-slate-800 mt-1 truncate max-w-[55px]">${u.username}</span>
-                            <span class="text-[9px] text-amber-700">${u.points}xal</span>
-                        </div>
-                    `;
-                });
-                avatarsRowHtml += `</div>`;
-                listEl.innerHTML = avatarsRowHtml;
-            } catch (e) {
-                console.error(e);
             }
         }
 
